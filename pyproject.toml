@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hdtr"
+version = "0.1.0"
+description = "Turkish RAG hallucination detection: data, training and evaluation"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "İshak Türk" }]
+dependencies = [
+  "numpy",
+  "pandas",
+  "scipy",
+  "scikit-learn",
+  "pyyaml",
+]
+
+[project.optional-dependencies]
+# Exact versions are pinned after the Phase 0 smoke test (see docs/technical-roadmap.md).
+colab = [
+  "transformers>=4.48.3,<5",
+  "datasets>=3.0",
+  "accelerate>=1.0",
+  "matplotlib",
+  "seaborn",
+  "openai>=1.40",
+]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

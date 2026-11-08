@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+.env
+
+# Large artifacts live on Google Drive, not in git
+checkpoints/
+predictions/
+data/raw/
+data/cache/
+*.safetensors
+*.bin

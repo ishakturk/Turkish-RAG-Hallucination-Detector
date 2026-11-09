@@ -25,7 +25,7 @@
 | D3 | Baselines: 6 Newmind detectors, KR Labs v2 mmBERT (zero-shot), 2 classical models. Optional: KR Labs v2 Qwen-2B. |
 | D4 | Runs: R0 TabiBERT with old-style recipe; R1 TabiBERT with our recipe; R2 mmBERT-base with our recipe; R3 KR Labs v2 mmBERT with our recipe; R4 = best of R1–R3 plus augmentation. |
 | D5 | Data audit uses alignment to the original English RAGTruth. The same audit runs on test, and we report both full test and clean test. |
-| D6 | Augmentation: native Turkish examples generated with **Qwen3.8-27B on Groq** (`qwen/qwen3.8-27b`, Apache-2.0, preview) from `alexandrainst/multi-wiki-qa` (`tr`). Target 4,000; the free tier allows about 1,500 by 20 Nov (see §2.6). |
+| D6 | Augmentation: ~4,000 native Turkish examples generated in one batch with **DeepSeek `deepseek-flash`** (thinking off) from `alexandrainst/multi-wiki-qa` (`tr`). Estimated cost $2.50–5 (see §2.6). Groq / Qwen3.8-27B is the fallback. |
 | D7 | Native test set: ~200 examples. The user labels at example level, blind. Claude labels independently; we compute κ, the user adjudicates, and spans are LLM-proposed and user-edited. Never used for training. |
 | D8 | Workflow: private GitHub repo, made public at submission. Notebooks are run manually in Colab, and each one ends with a `results/*.json`. |
 | D9 | Hugging Face release after the project. For submission, the trained model is downloadable without login (decided in Phase 4). |
@@ -72,7 +72,7 @@ Large files (checkpoints, predictions, augmented data) go to Google Drive under 
 
 **What you send back:** the `results/*.json` file, plus any figure the notebook names. Download them from Drive and drop them into the project's `results/` folder. I read and commit them. You never need to send whole notebooks.
 
-**Secrets:** `GROQ_API_KEY` and `GH_TOKEN` live only in Colab Secrets, read with `google.colab.userdata.get(...)`. They never go in a cell, the repo, or chat.
+**Secrets:** `DEEPSEEK_API_KEY` and `GH_TOKEN` live only in Colab Secrets, read with `google.colab.userdata.get(...)`. They never go in a cell, the repo, or chat.
 
 ### 1.3 Pinned environment
 - `transformers` 4.x (`<5`; the custom code of EuroBERT and gte needs it), `datasets`, `accelerate`, `lettucedetect==0.2.3` (used only to load baselines, cross-checked against our metrics), `scikit-learn`, `scipy`, `pandas`, `matplotlib`, `seaborn`, `openai` (DeepSeek's API is OpenAI-compatible), `vllm` (only in the native-answer notebook), `pytest`.
@@ -150,9 +150,22 @@ Reported as a separate ablation row: raw model vs post-processed.
 - **Cleaning policy:** rules 1, 3, 6 and 7 are hard drops. Rules 4 and 5 drop only when combined with another flag. Rule 2 is fixed by snapping. The rules are frozen before any model is trained on the cleaned data.
 - **Clean test:** the same rules applied to the final test. We report full test and clean test.
 
-### 2.6 Augmentation with Qwen3.8-27B on Groq (D6)
+### 2.6 Augmentation generator (D6)
 
-**Generator (decided 2026-11-08):** `qwen/qwen3.8-27b` on Groq, called through the OpenAI-compatible API
+**Generator (decided 2026-11-09): DeepSeek `deepseek-flash`**, called through the OpenAI-compatible API
+(`base_url=https://api.deepseek.com`, key in Colab Secrets as `DEEPSEEK_API_KEY`, $5 prepaid).
+- **Terms:** the Open Platform ToS (effective 2026-04-29, §4.2(3)) explicitly permits using outputs for "training other models (such as model distillation)".
+- **Thinking mode is on by default.** Send `extra_body={"thinking": {"type": "disabled"}}`. Notebook 00 asserts that no reasoning content comes back.
+- **JSON mode:** `response_format={"type": "json_object"}`, the word "json" in the prompt plus an example, a sensible `max_tokens`, and a retry on blank content.
+- **Limits:** concurrency only (2,500 per account), no RPM/TPM caps. 4,000 calls at ~20 concurrent should take ~15–30 min.
+- **Cost estimate** (measured: Turkish passages ≈ 2.5 characters per DeepSeek token, ~1,000 tokens per passage after capping):
+  - Per call: ~600 tokens of fixed instructions (billed at the cache-hit price), ~1,050 tokens of passage + question (cache miss), ~500 output tokens.
+  - That is ≈ $0.0009 per example at peak and ≈ $0.00046 off-peak.
+  - 4,000 examples + 30% retries ≈ **$4.80 peak / $2.40 off-peak**. Native test answers (~200) ≈ $0.15. `deepseek-v4-pro` would be ~3.5× more; use it only if Flash fails the quality gate.
+- **Off-peak** (half price): everything except weekdays 01:00–04:00 and 06:00–10:00 UTC (04:00–07:00 and 09:00–13:00 Turkish time).
+- **Data note:** multi-wiki-qa `tr` has 5,006 QA rows over only **673 Wikipedia articles**, so the augmentation/native-test split is by article title.
+
+**Fallback (kept for reference): Groq `qwen/qwen3.8-27b`**, called through the OpenAI-compatible API
 (`base_url=https://api.groq.com/openai/v1`, key in Colab Secrets as `GROQ_API_KEY`). It replaces
 DeepSeek in this section.
 - **Licensing:** the model is Apache-2.0. Groq's Services Agreement has no clause against training on outputs (§6.3(e) only bars competing with Groq's cloud). Verified 2026-11-08.
@@ -165,7 +178,7 @@ DeepSeek in this section.
 - **Saving tokens:** cap contexts at ~350 words (cut at a paragraph boundary), ask for compact JSON without explanations, and use one call per example (both the faithful and the hallucinated version).
 - **Native test answers** use the same daily budget (~200 × ~1.2K tokens ≈ 1.5 days). Schedule them on separate days from augmentation.
 
-The original DeepSeek-based plan follows; read "DeepSeek" as "the generator".
+The generation spec below applies to whichever generator is used.
 - **Source:** `alexandrainst/multi-wiki-qa`, config `tr` (5,006 rows, CC BY-NC-SA 4.0). Split **by Wikipedia title**: 4,000 rows for augmentation, ~1,000 reserved as the context pool for the native test set. The two never share a title.
 - **Generation (per row, one API call, JSON output):**
   1. a faithful answer in natural Turkish (2–5 sentences) to the question using only the context;
@@ -366,7 +379,10 @@ These are estimates. The pilot replaces them with measured numbers on 13 Nov. Ru
   - The first repetition rule flagged business names repeated in Data2txt answers. It was changed to compare against the English original (now 0 drops).
   - Hallucinated share: Data2txt 64–69%, QA 18–31%, Summary 23–31% (test/train).
 - `data/splits.json` committed: train 14,334 / validation 756 / dev 540 / test 2,160 (+ `_clean` variants).
-- Still to run in Colab: `00_setup_smoke` (GPU, detectors, TabiBERT memory, Groq call) and the tokenizer-length part of `01`.
+- Still to run in Colab: `00_setup_smoke` (GPU, detectors, TabiBERT memory, DeepSeek call) and the tokenizer-length part of `01`.
+
+**2026-11-09**
+- Generator switched from Groq (200K tokens/day limit, which would mean running daily for ~12 days) to DeepSeek `deepseek-flash`. It runs as one batch for an estimated $2.50–5. Notebook 00 now checks the DeepSeek key, JSON mode, and that thinking mode is off.
 
 ## 9. Immediate next steps (this weekend)
 1. **User:** create the private GitHub repo; add `GH_TOKEN` to Colab Secrets; create `MyDrive/hdtr/`; get the DeepSeek key into Colab Secrets when ready.

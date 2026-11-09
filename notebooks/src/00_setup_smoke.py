@@ -11,9 +11,9 @@
 # 3. RAGTruth-TR: which string the label offsets refer to
 # 4. Two existing detectors on 5 test examples (speed, output format)
 # 5. TabiBERT memory and speed at long input lengths
-# 6. (Optional) one call to the Groq API
+# 6. One call to the DeepSeek API (the augmentation data generator)
 #
-# **Runtime:** L4 GPU. **Secrets needed:** `GH_TOKEN` (and `GROQ_API_KEY` for step 6).
+# **Runtime:** L4 GPU. **Secrets needed:** `GH_TOKEN` and `DEEPSEEK_API_KEY`.
 # **Output:** `MyDrive/hdtr/results/00_smoke.json` — send this file back.
 
 # %% [markdown]
@@ -211,37 +211,57 @@ del model
 torch.cuda.empty_cache()
 
 # %% [markdown]
-# ## 6. (Optional) Groq API check
-# One small request to `qwen/qwen3.8-27b` with reasoning switched off, to confirm the key works
-# and to see how many tokens a short Turkish answer costs. Skipped if `GROQ_API_KEY` is not set.
+# ## 6. DeepSeek API check
+# One small request to `deepseek-flash` (the data generator for augmentation) to confirm that:
+# - the `DEEPSEEK_API_KEY` secret works,
+# - **thinking mode is really off** (it is on by default and would multiply the cost),
+# - JSON output mode returns valid JSON in Turkish.
+#
+# Cost of this cell: a fraction of a cent. Skipped if the secret is not set.
 
 # %%
 try:
-    groq_key = userdata.get("GROQ_API_KEY")
+    deepseek_key = userdata.get("DEEPSEEK_API_KEY")
 except Exception:
-    groq_key = None
+    deepseek_key = None
 
-if groq_key:
+if deepseek_key:
     from openai import OpenAI
-    client = OpenAI(api_key=groq_key, base_url="https://api.groq.com/openai/v1")
+    client = OpenAI(api_key=deepseek_key, base_url="https://api.deepseek.com")
     start = time.perf_counter()
     resp = client.chat.completions.create(
-        model="qwen/qwen3.8-27b",
-        messages=[{"role": "user", "content": "Bağlam: Başvurular 15 Ocak'ta kapanır.\n"
-                   "Soru: Başvurular ne zaman kapanır? Tek cümleyle Türkçe yanıtla."}],
-        reasoning_effort="none",
+        model="deepseek-flash",
+        messages=[
+            {"role": "system", "content": "Yalnızca geçerli JSON döndür. Örnek: {\"cevap\": \"...\"}"},
+            {"role": "user", "content": "Bağlam: Başvurular 15 Ocak'ta kapanır.\n"
+             "Soru: Başvurular ne zaman kapanır? Tek cümlelik Türkçe yanıtı json olarak ver."},
+        ],
+        response_format={"type": "json_object"},
+        extra_body={"thinking": {"type": "disabled"}},
         temperature=0.7,
         max_tokens=100,
     )
-    results["groq"] = {
-        "answer": resp.choices[0].message.content,
-        "usage": resp.usage.model_dump() if resp.usage else None,
+    usage = resp.usage.model_dump() if resp.usage else {}
+    details = usage.get("completion_tokens_details") or {}
+    message = resp.choices[0].message
+    try:
+        parsed = json.loads(message.content)
+    except (TypeError, json.JSONDecodeError):
+        parsed = None
+    results["deepseek"] = {
+        "model": resp.model,
+        "content": message.content,
+        "valid_json": parsed is not None,
+        "reasoning_tokens": details.get("reasoning_tokens"),
+        "has_reasoning_content": bool(getattr(message, "reasoning_content", None)),
+        "usage": usage,
         "seconds": round(time.perf_counter() - start, 2),
     }
-    print(results["groq"])
+    print(json.dumps(results["deepseek"], ensure_ascii=False, indent=2))
+    assert not results["deepseek"]["has_reasoning_content"], "Thinking mode is still on: check the request."
 else:
-    results["groq"] = None
-    print("GROQ_API_KEY not set; skipped.")
+    results["deepseek"] = None
+    print("DEEPSEEK_API_KEY not set; skipped.")
 
 # %% [markdown]
 # ## Save results

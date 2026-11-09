@@ -108,10 +108,10 @@ if MODE == "gate":
     sample = aug_rows.sample(60, random_state=482)
     pattern = [("QA", True), ("QA", False), ("Summary", True), ("QA", True), ("QA", False), ("Summary", False)]
     plans = A.make_plans(sample, seed=482, forced=pattern)[:30]
-    out_jsonl, budget, concurrency = f"{DRIVE_DIR}/augment/gate.jsonl", 0.5, 10
+    out_jsonl, budget, concurrency = f"{DRIVE_DIR}/augment/gate_v{A.PROMPT_VERSION}.jsonl", 0.5, 10
 else:
     plans = A.make_plans(aug_rows, seed=482)
-    out_jsonl, budget, concurrency = f"{DRIVE_DIR}/augment/full.jsonl", 4.0, 20
+    out_jsonl, budget, concurrency = f"{DRIVE_DIR}/augment/full_v{A.PROMPT_VERSION}.jsonl", 4.0, 20
 
 print(f"{len(plans)} plans | QA {sum(p['task_type'] == 'QA' for p in plans)} | "
       f"Summary {sum(p['task_type'] == 'Summary' for p in plans)} | "
@@ -120,7 +120,8 @@ print("Peak price right now." if A.is_peak() else "Off-peak price right now (hal
 
 # %% [markdown]
 # ## Generate
-# Resumable: rows already in the JSONL on Drive are skipped. Each row gets up to 2 attempts if
+# Resumable: rows already in the JSONL on Drive are skipped. The file name carries the prompt version,
+# so a changed prompt always starts a fresh file. Each row gets up to 2 attempts if
 # validation fails.
 
 # %%
@@ -212,7 +213,7 @@ if MODE == "full":
 
 # %%
 results = {"notebook": "04_augmentation", "mode": MODE, "commit": commit,
-           "time": time.strftime("%Y-%m-%d %H:%M"), "model": A.MODEL, "run": run, "stats": stats,
+           "time": time.strftime("%Y-%m-%d %H:%M"), "model": A.MODEL, "prompt_version": A.PROMPT_VERSION, "run": run, "stats": stats,
            "split": {"augment_rows": len(aug_rows), "augment_titles": len(split["augment_titles"]),
                      "native_titles": len(split["native_titles"])},
            "plans": len(plans)}

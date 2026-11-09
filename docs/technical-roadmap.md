@@ -443,6 +443,13 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - Example F1 at 0.5 hides calibration differences. Thresholds will be tuned per system on dev (notebook 07).
   - Speed: 0.018–0.047 s/example on L4.
 - **Go/no-go (Phase 1):** baselines ✓, alignment ✓, compute ✓ (training is cheap). Still open: the DeepSeek 30-example quality gate. **Decision: go.**
+- **Augmentation gate, prompt v1** (`results/04_gate_v1.json`, DeepSeek `deepseek-flash`, $0.021 for 30 rows = $0.0007/row at peak, so ~$2.70 peak / ~$1.35 off-peak for the full 3,830 rows):
+  - Automatic checks: 30/30 accepted on the first try.
+  - Claude reviewed all 30 against their contexts: **28/30 acceptable (93%, gate threshold 85%)**.
+    - Faithful answers: 29/30 correct. #30 says "two years later" for albums from 2000 and 2003 (a computed interval). #7 credits Sean Ellis as producer from an ambiguous Turkish source sentence (borderline).
+    - Versions with errors: 13/15 good. #5's added claim is half entailed by the context ("vegetarian" → "eats no meat or fish") and contradicts the next clause. #30 tags "Ankara'daki Kadri Yörükoğlu Lisesi", although only "Ankara'daki" is wrong. Error-type labels are sometimes off (a changed number reported as "unsupported"); binary labels are unaffected.
+  - **Position shortcut found:** 10/15 versions with errors end on a tagged span, and 33% of spans are a whole appended final sentence (RAGTruth-TR QA+Summary: 11%). Every faithful answer is also a training example, so a detector could learn "extra last sentence = hallucinated". Unsupported claims were also often vague praise ("büyük ilgi gördü").
+  - **Prompt v2:** unsupported claims go mostly inside existing sentences as specific details; errors spread over the answer; tags cover only the wrong words; no computed intervals or counts in faithful answers. `batch_stats` now reports `span_final_sentence_share`. Output files are versioned, so gate v2 starts fresh. Gate v2 is to be rerun, with the user spot-checking 5 rows.
 - Notebook `04_augmentation` and `hdtr.augment` written (spec in §2.6), with 11 unit tests (49 in total). A local dry run of both modes with a fake DeepSeek client passes: resume, retries, budget accounting, review cards and CSV, parquet output. Title split committed as `data/mwqa_split.json` (augmentation 4,003 rows / 540 articles; native pool 1,003 rows / 133 articles).
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 - **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
@@ -471,8 +478,8 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - The pilot covers QA only. Summary, the weak task in the baselines, is first measured in the full runs.
 
 ## 9. Immediate next steps (from 9 Nov)
-1. **User:** run `04_augmentation` with `MODE = "gate"` (CPU runtime, ~$0.03). Review the 30 cards, fill in `gate_review.csv`, and send it back with `results/04_gate.json`.
-2. **Claude:** review the same 30 independently, then fix the prompt or validation if needed.
+1. **User:** rerun `04_augmentation` with `MODE = "gate"` (prompt v2, ~$0.02) and send `results/04_gate.json`.
+2. **Claude:** review all 30 and check `span_final_sentence_share` (target ≈ 0.1–0.2). **User:** spot-check the 5 rows Claude names.
 3. If ≥85% are acceptable: **user** runs `MODE = "full"`, `GATE_PASSED = True`, off-peak (~$1.35).
 4. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
 5. Native test set: context selection from the reserved titles, labeling guide, answer generation (`05b`).

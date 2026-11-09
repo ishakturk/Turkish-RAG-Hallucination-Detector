@@ -25,6 +25,9 @@ from .data import _english_share, numbers
 from .text import ends_like_sentence, words
 
 MODEL = "deepseek-flash"
+# Bump when SYSTEM_PROMPT changes: output files are named by it, so a new gate never reuses old rows.
+# v2 (9 Nov): errors inside sentences instead of appended final sentences, tight tags, no arithmetic.
+PROMPT_VERSION = 2
 BASE_URL = "https://api.deepseek.com"
 
 # USD per 1M tokens, deepseek-flash (verified 2026-11-09). Off-peak is half price.
@@ -235,6 +238,7 @@ You receive a TASK PROMPT in Turkish (a question with passages, or a text to sum
 
 Step 1, "faithful": respond to the TASK PROMPT in natural, fluent Turkish, the way a careful AI assistant would.
 - Use only information stated in the passages or text. Do not add background knowledge, even if it is true.
+- Do not compute intervals, totals or counts that the text does not state ("two years later" when the text gives 2000 and 2003); reuse the text's own figures and wording.
 - QA: 2-5 sentences that answer the question. Summary: about SPEC.summary_words words.
 - Plain text only: no Markdown headings, no bullet lists, no <HAL> tags.
 
@@ -242,9 +246,9 @@ Step 2, "hallucinated" (only when SPEC.hallucinate is true, otherwise null): cop
 - entity: replace a name, place, organization or title with a different, plausible one.
 - number: change a number, date, quantity or ranking.
 - contradiction: make a statement say the opposite of, or something incompatible with, the context.
-- unsupported: add a plausible-sounding claim (a clause or a short sentence) that the context does not state.
-Every error must be detectable by a careful reader who has only the context. Keep errors fluent and grammatical: adjust Turkish suffixes so the sentence reads naturally.
-Wrap exactly the changed or added words of each error in <HAL>...</HAL>. Keep tags tight (the wrong words with their suffixes, nothing else), never nest tags, and tag nothing else.
+- unsupported: add a plausible-sounding claim that the context does not state. In most cases work it into an existing sentence as a clause, modifier or detail (a reason, date, place, name, number or consequence), anywhere in the response. Only occasionally add it as a separate sentence, and then not always as the last one. Prefer specific details over vague praise such as "büyük ilgi gördü" or "büyük başarı elde etti".
+Every error must be detectable by a careful reader who has only the context. Spread errors over the response; do not always put them at the end. Keep errors fluent and grammatical: adjust Turkish suffixes so the sentence reads naturally, and keep the rest of the response consistent with the error (do not leave a sentence that contradicts it).
+Wrap exactly the changed or added words of each error in <HAL>...</HAL>. Keep tags tight: only the wrong words with their suffixes, never the correct words around them (if you add "Ankara'daki" before a correct school name, tag only "Ankara'daki"). Never nest tags, and tag nothing else.
 
 "errors": one item per <HAL> tag, in the same order: {"type": the error type, "original": the faithful words it replaced ("" for unsupported), "changed": the words inside the tag}.
 
@@ -483,6 +487,12 @@ def records_frame(lines: list[dict]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _final_sentence(answer: str, span: dict) -> bool:
+    """The span is a whole sentence at the very end of the answer."""
+    before = answer[:span["start"]].rstrip()
+    return len(answer.rstrip()) - span["end"] <= 2 and (not before or before[-1] in ".!?:")
+
+
 def batch_stats(lines: list[dict]) -> dict:
     from collections import Counter
 
@@ -494,7 +504,9 @@ def batch_stats(lines: list[dict]) -> dict:
     cost = sum(call_cost(u) for u in usage)
     frame = records_frame(lines)
     by = frame.groupby(["task_type", "variant"]).size().to_dict() if len(frame) else {}
-    spans = [len(r["labels"]) for l in accepted for r in l["records"] if r["variant"] == "hallucinated"]
+    hall = [r for l in accepted for r in l["records"] if r["variant"] == "hallucinated"]
+    spans = [len(r["labels"]) for r in hall]
+    all_spans = [(r["answer"], s) for r in hall for s in r["labels"]]
     return {
         "rows": n, "accepted_rows": len(accepted),
         "acceptance_rate": round(len(accepted) / n, 3) if n else None,
@@ -502,6 +514,9 @@ def batch_stats(lines: list[dict]) -> dict:
         "rejection_reasons": dict(reasons.most_common()),
         "records": len(frame), "records_by_task_variant": {f"{k[0]}/{k[1]}": v for k, v in by.items()},
         "spans_per_hallucinated": round(sum(spans) / len(spans), 2) if spans else None,
+        # Position shortcut check: RAGTruth-TR QA+Summary has 11% of spans as a whole final sentence.
+        "span_final_sentence_share": round(sum(_final_sentence(a, s) for a, s in all_spans) / len(all_spans), 3)
+        if all_spans else None,
         "tokens": {k: int(sum((u.get(k) or 0) for u in usage)) for k in
                    ("prompt_cache_hit_tokens", "prompt_cache_miss_tokens", "completion_tokens")},
         "cost_usd_peak": round(cost, 4), "cost_usd_off_peak": round(cost / 2, 4),

@@ -456,7 +456,9 @@ The table above is the original estimate. Rules: pick the runtime type before st
     - #29 `mwqa00669`: a tag around an *unchanged* name ("Kosta Runjaić'e"), which would label correct text as hallucinated. New check `hallucinated_span_unchanged`: every span must overlap text that differs from the faithful answer (character diff). Replayed on both gates, it flags exactly this row.
     - #13 `mwqa01400`: the inserted clause is ungrammatical ("Hollanda'nın organizasyonu … gerçekleştiği açıklandı"). Not checkable automatically. Watch for it in the full-run sample.
     - Borderline #12 `mwqa02799`: the faithful summary reads the results table's total row as "2 MPs elected with 100% of the vote". Garbled, but not against the source.
-  - **Gate passed.** The user spot-checks 5 rows (#11, #12, #13, #14, #29), then runs the full batch.
+  - **Gate passed.** User spot check of 5 rows (9 Nov), blind to the reasons for Claude's verdicts:
+    - Agreed on 4/5: `mwqa00879` and `mwqa02379` are good, real unsupported claims; `mwqa00669` is wrong (tag on unchanged text); `mwqa02799` is unneeded but not false.
+    - Disagreed on `mwqa01400`: as a native speaker, the user finds the inserted clause natural Turkish, not broken. The user's judgment stands, so the final count is **29/30 (97%)**, and the one failure is now rejected automatically.
 - Notebook `04_augmentation` and `hdtr.augment` written (spec in §2.6), with 11 unit tests (49 in total). A local dry run of both modes with a fake DeepSeek client passes: resume, retries, budget accounting, review cards and CSV, parquet output. Title split committed as `data/mwqa_split.json` (augmentation 4,003 rows / 540 articles; native pool 1,003 rows / 133 articles).
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 - **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
@@ -485,7 +487,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - The pilot covers QA only. Summary, the weak task in the baselines, is first measured in the full runs.
 
 ## 9. Immediate next steps (from 9 Nov)
-1. **User:** spot-check gate v2 rows `mwqa00879`, `mwqa02799`, `mwqa01400`, `mwqa02379`, `mwqa00669` (agree or disagree with Claude's verdicts).
+1. ~~User spot check~~ done (see the progress log).
 2. **User:** run `04_augmentation` with `MODE = "full"`, `GATE_PASSED = True`, off-peak (~$1.50; $4 cap), and send `results/04_augmentation.json`.
 4. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
 5. Native test set: context selection from the reserved titles, labeling guide, answer generation (`05b`).

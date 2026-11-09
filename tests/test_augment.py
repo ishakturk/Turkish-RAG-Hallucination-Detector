@@ -84,6 +84,10 @@ def test_validate_rejections():
     _, r = A.validate(_plan(), {"faithful": good, "hallucinated": good.replace("1927", "<HAL>1927</HAL>"),
                                 "errors": [{"type": "number"}]})
     assert "hallucinated_no_change" in r
+    # one real change, but a second tag around unchanged (correct) text
+    _, r = A.validate(_plan(n_errors=2), {"faithful": good, "errors": [{"type": "number"}, {"type": "entity"}],
+                                          "hallucinated": good.replace("1927", "<HAL>1931</HAL>").replace("Skonto FC", "<HAL>Skonto FC</HAL>")})
+    assert "hallucinated_span_unchanged" in r
     # rewritten instead of edited
     _, r = A.validate(_plan(), {"faithful": good, "errors": [{"type": "unsupported"}],
                                 "hallucinated": "Takım <HAL>Avrupa'da da başarılı oldu</HAL> ve ülkede çok sevilen bir spor haline geldi."})

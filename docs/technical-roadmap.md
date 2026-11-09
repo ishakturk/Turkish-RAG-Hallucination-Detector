@@ -450,6 +450,13 @@ The table above is the original estimate. Rules: pick the runtime type before st
     - Versions with errors: 13/15 good. #5's added claim is half entailed by the context ("vegetarian" → "eats no meat or fish") and contradicts the next clause. #30 tags "Ankara'daki Kadri Yörükoğlu Lisesi", although only "Ankara'daki" is wrong. Error-type labels are sometimes off (a changed number reported as "unsupported"); binary labels are unaffected.
   - **Position shortcut found:** 10/15 versions with errors end on a tagged span, and 33% of spans are a whole appended final sentence (RAGTruth-TR QA+Summary: 11%). Every faithful answer is also a training example, so a detector could learn "extra last sentence = hallucinated". Unsupported claims were also often vague praise ("büyük ilgi gördü").
   - **Prompt v2:** unsupported claims go mostly inside existing sentences as specific details; errors spread over the answer; tags cover only the wrong words; no computed intervals or counts in faithful answers. `batch_stats` now reports `span_final_sentence_share`. Output files are versioned, so gate v2 starts fresh. Gate v2 is to be rerun, with the user spot-checking 5 rows.
+- **Augmentation gate, prompt v2** (`results/04_gate_v2.json`, same 30 contexts, $0.023 = $0.00077/row, so ~$2.95 peak / ~$1.50 off-peak for the full run):
+  - Automatic checks: 30/30 accepted (2 on the second attempt). **`span_final_sentence_share` 0.111** (v1 0.333; RAGTruth-TR 0.11): the position shortcut is gone.
+  - Claude's review: **28/30 acceptable (93%)**. Errors are now mostly subtle details inside sentences ("kışlık olarak saklanan kurutulmuş et", "üyelerinin yoğun isteği üzerine"), and all v1 defects are fixed.
+    - #29 `mwqa00669`: a tag around an *unchanged* name ("Kosta Runjaić'e"), which would label correct text as hallucinated. New check `hallucinated_span_unchanged`: every span must overlap text that differs from the faithful answer (character diff). Replayed on both gates, it flags exactly this row.
+    - #13 `mwqa01400`: the inserted clause is ungrammatical ("Hollanda'nın organizasyonu … gerçekleştiği açıklandı"). Not checkable automatically. Watch for it in the full-run sample.
+    - Borderline #12 `mwqa02799`: the faithful summary reads the results table's total row as "2 MPs elected with 100% of the vote". Garbled, but not against the source.
+  - **Gate passed.** The user spot-checks 5 rows (#11, #12, #13, #14, #29), then runs the full batch.
 - Notebook `04_augmentation` and `hdtr.augment` written (spec in §2.6), with 11 unit tests (49 in total). A local dry run of both modes with a fake DeepSeek client passes: resume, retries, budget accounting, review cards and CSV, parquet output. Title split committed as `data/mwqa_split.json` (augmentation 4,003 rows / 540 articles; native pool 1,003 rows / 133 articles).
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 - **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
@@ -478,8 +485,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - The pilot covers QA only. Summary, the weak task in the baselines, is first measured in the full runs.
 
 ## 9. Immediate next steps (from 9 Nov)
-1. **User:** rerun `04_augmentation` with `MODE = "gate"` (prompt v2, ~$0.02) and send `results/04_gate.json`.
-2. **Claude:** review all 30 and check `span_final_sentence_share` (target ≈ 0.1–0.2). **User:** spot-check the 5 rows Claude names.
-3. If ≥85% are acceptable: **user** runs `MODE = "full"`, `GATE_PASSED = True`, off-peak (~$1.35).
+1. **User:** spot-check gate v2 rows `mwqa00879`, `mwqa02799`, `mwqa01400`, `mwqa02379`, `mwqa00669` (agree or disagree with Claude's verdicts).
+2. **User:** run `04_augmentation` with `MODE = "full"`, `GATE_PASSED = True`, off-peak (~$1.50; $4 cap), and send `results/04_augmentation.json`.
 4. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
 5. Native test set: context selection from the reserved titles, labeling guide, answer generation (`05b`).

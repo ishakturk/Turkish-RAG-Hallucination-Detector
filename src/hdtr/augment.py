@@ -322,6 +322,20 @@ def _check_response(text: str, prompt: str, task: str) -> list[str]:
     return reasons
 
 
+def _changed_mask(original: str, edited: str) -> list[bool]:
+    """Per character of ``edited``: True where it differs from ``original`` (replaced or
+    inserted text, plus the characters next to a deletion)."""
+    mask = [False] * len(edited)
+    for tag, _, _, j1, j2 in SequenceMatcher(None, original, edited, autojunk=False).get_opcodes():
+        if tag in ("replace", "insert"):
+            mask[j1:j2] = [True] * (j2 - j1)
+        elif tag == "delete":
+            for j in (j1 - 1, j1):
+                if 0 <= j < len(edited):
+                    mask[j] = True
+    return mask
+
+
 def validate(plan: dict, payload: dict) -> tuple[list[dict], list[str]]:
     """Turn one API response into training records (faithful, plus hallucinated if planned).
     Returns (records, rejection reasons); any reason rejects the whole row."""
@@ -355,6 +369,9 @@ def validate(plan: dict, payload: dict) -> tuple[list[dict], list[str]]:
             reasons.append("hallucinated_no_change")
         elif SequenceMatcher(None, faithful, text, autojunk=False).ratio() < 0.7:
             reasons.append("hallucinated_rewritten")
+        changed = _changed_mask(faithful, text)
+        if any(not any(changed[s["start"]:s["end"]]) for s in spans):
+            reasons.append("hallucinated_span_unchanged")
         for s in spans:
             span_text = text[s["start"]:s["end"]]
             if len(words(span_text)) >= 4 and span_text in prompt:

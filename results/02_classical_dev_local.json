@@ -1,0 +1,173 @@
+{
+  "note": "dev split only, local CPU run 2026-11-09; thresholds not tuned except a coarse look for lexical",
+  "results": {
+    "lexical_overlap": {
+      "0.5": {
+        "overall": {
+          "ex_f1": 0.5694,
+          "word_f1": 0.1096,
+          "span_f1": 0.1038,
+          "ex_auroc": 0.7514,
+          "word_auroc": 0.6954
+        },
+        "Data2txt": {
+          "ex_f1": 0.7838,
+          "word_f1": 0.091,
+          "span_f1": 0.0857,
+          "ex_auroc": 0.5777,
+          "word_auroc": 0.6789
+        },
+        "QA": {
+          "ex_f1": 0.4061,
+          "word_f1": 0.213,
+          "span_f1": 0.2061,
+          "ex_auroc": 0.7429,
+          "word_auroc": 0.8476
+        },
+        "Summary": {
+          "ex_f1": 0.4273,
+          "word_f1": 0.06,
+          "span_f1": 0.0557,
+          "ex_auroc": 0.6712,
+          "word_auroc": 0.6415
+        }
+      },
+      "0.6": {
+        "overall": {
+          "ex_f1": 0.5928,
+          "word_f1": 0.1248,
+          "span_f1": 0.1189,
+          "ex_auroc": 0.7514,
+          "word_auroc": 0.6954
+        },
+        "Data2txt": {
+          "ex_f1": 0.7838,
+          "word_f1": 0.0955,
+          "span_f1": 0.0902,
+          "ex_auroc": 0.5777,
+          "word_auroc": 0.6789
+        },
+        "QA": {
+          "ex_f1": 0.4497,
+          "word_f1": 0.2862,
+          "span_f1": 0.2801,
+          "ex_auroc": 0.7429,
+          "word_auroc": 0.8476
+        },
+        "Summary": {
+          "ex_f1": 0.4335,
+          "word_f1": 0.0802,
+          "span_f1": 0.0769,
+          "ex_auroc": 0.6712,
+          "word_auroc": 0.6415
+        }
+      },
+      "0.7": {
+        "overall": {
+          "ex_f1": 0.6381,
+          "word_f1": 0.1313,
+          "span_f1": 0.1249,
+          "ex_auroc": 0.7514,
+          "word_auroc": 0.6954
+        },
+        "Data2txt": {
+          "ex_f1": 0.7838,
+          "word_f1": 0.1028,
+          "span_f1": 0.0967,
+          "ex_auroc": 0.5777,
+          "word_auroc": 0.6789
+        },
+        "QA": {
+          "ex_f1": 0.4818,
+          "word_f1": 0.3112,
+          "span_f1": 0.3107,
+          "ex_auroc": 0.7429,
+          "word_auroc": 0.8476
+        },
+        "Summary": {
+          "ex_f1": 0.4933,
+          "word_f1": 0.1136,
+          "span_f1": 0.108,
+          "ex_auroc": 0.6712,
+          "word_auroc": 0.6415
+        }
+      },
+      "0.8": {
+        "overall": {
+          "ex_f1": 0.6441,
+          "word_f1": 0.1312,
+          "span_f1": 0.1256,
+          "ex_auroc": 0.7514,
+          "word_auroc": 0.6954
+        },
+        "Data2txt": {
+          "ex_f1": 0.7797,
+          "word_f1": 0.1131,
+          "span_f1": 0.1065,
+          "ex_auroc": 0.5777,
+          "word_auroc": 0.6789
+        },
+        "QA": {
+          "ex_f1": 0.4865,
+          "word_f1": 0.281,
+          "span_f1": 0.2846,
+          "ex_auroc": 0.7429,
+          "word_auroc": 0.8476
+        },
+        "Summary": {
+          "ex_f1": 0.4124,
+          "word_f1": 0.0858,
+          "span_f1": 0.0851,
+          "ex_auroc": 0.6712,
+          "word_auroc": 0.6415
+        }
+      }
+    },
+    "word_logreg": {
+      "0.5": {
+        "overall": {
+          "ex_f1": 0.603,
+          "word_f1": 0.1613,
+          "span_f1": 0.1548,
+          "ex_auroc": 0.738,
+          "word_auroc": 0.7338
+        },
+        "Data2txt": {
+          "ex_f1": 0.7838,
+          "word_f1": 0.1292,
+          "span_f1": 0.1219,
+          "ex_auroc": 0.5112,
+          "word_auroc": 0.706
+        },
+        "QA": {
+          "ex_f1": 0.4571,
+          "word_f1": 0.29,
+          "span_f1": 0.2898,
+          "ex_auroc": 0.7649,
+          "word_auroc": 0.8181
+        },
+        "Summary": {
+          "ex_f1": 0.455,
+          "word_f1": 0.1245,
+          "span_f1": 0.1214,
+          "ex_auroc": 0.6671,
+          "word_auroc": 0.6778
+        }
+      }
+    }
+  },
+  "word_logreg_coefficients": {
+    "in_ctx": -0.28600001335144043,
+    "stem_in_ctx": -0.04600000008940697,
+    "is_number": 1.5199999809265137,
+    "number_in_ctx": -0.7979999780654907,
+    "capitalized": 0.07599999755620956,
+    "sentence_initial": -0.3070000112056732,
+    "length": -0.6700000166893005,
+    "position": 0.8519999980926514,
+    "sent_novelty": -0.07800000160932541,
+    "sent_oov_share": 2.8489999771118164,
+    "prev_stem_in_ctx": -0.13199999928474426,
+    "next_stem_in_ctx": -0.15399999916553497
+  }
+}

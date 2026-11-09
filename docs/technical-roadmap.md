@@ -383,6 +383,33 @@ These are estimates. The pilot replaces them with measured numbers on 13 Nov. Ru
 
 **2026-11-09**
 - Generator switched from Groq (200K tokens/day limit, which would mean running daily for ~12 days) to DeepSeek `deepseek-flash`. It runs as one batch for an estimated $2.50–5. Notebook 00 now checks the DeepSeek key, JSON mode, and that thinking mode is off.
+- **Notebook 00 ran on Colab L4** (`results/00_smoke.json`):
+  - Environment: Python 3.13, torch 2.14, transformers 4.57.6, bf16 available, no flash-attn (ModernBERT falls back to SDPA without unpadding, so length-grouped batching matters).
+  - **Label offsets index the `answer`:** 99.8% of spans fall on word boundaries in the answer vs 15% in the prompt.
+  - TabiBERT and mmBERT keep case. The Newmind ModernBERT tokenizer lowercases internally, but its offsets are still valid.
+  - Both detectors run at ~0.04 s/example, so the 2,700 test responses take ~2 min per model. Newmind's label 1 = hallucinated (its one prediction matched gold exactly). KR Labs v2 mmBERT predicted nothing on 5 examples (zero-shot, expected to be weak).
+  - **TabiBERT training memory is small:** 8,192 tokens fwd+bwd at batch 1 with gradient checkpointing = 4.8 GB. 2,048 tokens = 1.4 GB, 0.1 s.
+  - DeepSeek: valid JSON, no reasoning content, 22 output tokens. Thinking-off works.
+- **Token lengths, measured locally** (`results/01_token_lengths_local.json`, prompt + answer):
+
+  | Tokenizer | mean | p99 | max | > 512 | > 4,096 |
+  |---|---|---|---|---|---|
+  | TabiBERT | 868 | 2,028 | 3,850 | 78% | 0% |
+  | mmBERT | 997 | 2,516 | 4,591 | 92% | 0.01% |
+  | Newmind ModernBERT-tr | 813 | 1,932 | 3,390 | 75% | 0% |
+  | BERTurk | 846 | 2,010 | 3,511 | 77% | 0% |
+
+  - A 512-token model would truncate ~3/4 of inputs, which shows why long context matters. `max_length=4096` covers every TabiBERT input.
+  - mmBERT needs ~15% more tokens than TabiBERT on this data (the TabiBERT paper's 41% is for general text).
+  - One TabiBERT epoch over train is ~13.1M tokens. Extrapolating from the smoke test, that is roughly 10–20 min/epoch on an L4, much cheaper than the §6 estimate. The pilot will measure it.
+- **Finding: 9% of TabiBERT tokens span two words** (e.g. `a kadar` = the suffix of "Ocak'a" + "kadar"). For mmBERT and Newmind it is 0%. A cross-word token carries one label, so predictions can bleed into the next word and gold boundaries get coarser.
+  - Pilot (03) will compare default tokenization with word-split input (`is_split_into_words`) for TabiBERT.
+  - Good material for the report: a Turkish-tokenizer effect on span detection.
+- **Classical baselines on dev** (local CPU, τ=0.5, `results/02_classical_dev_local.json`):
+  - Lexical overlap: example F1 0.57, span F1 0.10, example AUROC 0.75.
+  - Word logistic regression: example F1 0.60, span F1 0.15, example AUROC 0.74, word AUROC 0.73.
+  - Strongest features: share of words in the sentence not found in the context, and "is a number". Data2txt example F1 0.78 equals predicting "hallucinated" for everything (64% of Data2txt dev is hallucinated), so example F1 must be read next to AUROC.
+- Notebook `02_baselines` written: all 7 transformer detectors + 2 classical baselines on dev + sealed test, with predictions saved to Drive.
 
 ## 9. Immediate next steps (this weekend)
 1. **User:** create the private GitHub repo; add `GH_TOKEN` to Colab Secrets; create `MyDrive/hdtr/`; get the DeepSeek key into Colab Secrets when ready.

@@ -19,7 +19,7 @@
 # ## Setup
 
 # %%
-import os, subprocess, sys
+import base64, os, subprocess, sys
 
 REPO = "ishakturk/Turkish-RAG-Hallucination-Detector"
 REPO_DIR = "/content/Turkish-RAG-Hallucination-Detector"
@@ -31,14 +31,28 @@ for sub in ("results", "data", "cache"):
     os.makedirs(f"{DRIVE_DIR}/{sub}", exist_ok=True)
 
 token = userdata.get("GH_TOKEN")
-auth_url = f"https://x-access-token:{token}@github.com/{REPO}.git"
+if not token:
+    raise RuntimeError("GH_TOKEN secret is missing or 'Notebook access' is off (key icon in the left bar).")
+
+def git(*args):
+    """Run git with the token passed through the environment, never in the command line,
+    so it cannot appear in error messages or in .git/config."""
+    header = base64.b64encode(f"x-access-token:{token}".encode()).decode()
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_COUNT": "1",
+           "GIT_CONFIG_KEY_0": "http.https://github.com/.extraheader",
+           "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {header}"}
+    r = subprocess.run(["git", *args], env=env, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"git {args[0]} failed: {r.stderr.strip().replace(token, '***')}\n"
+                           "If it says 'not found' or 'authentication', check that the token can read this repo "
+                           "(Repository access + Contents: Read-only).")
+    return r.stdout.strip()
+
 if not os.path.exists(REPO_DIR):
-    subprocess.run(["git", "clone", "-q", "--depth", "1", auth_url, REPO_DIR], check=True)
+    git("clone", "-q", "--depth", "1", f"https://github.com/{REPO}.git", REPO_DIR)
 else:
-    subprocess.run(["git", "-C", REPO_DIR, "pull", "-q", auth_url, "main"], check=True)
-subprocess.run(["git", "-C", REPO_DIR, "remote", "set-url", "origin", f"https://github.com/{REPO}.git"], check=True)
-commit = subprocess.run(["git", "-C", REPO_DIR, "rev-parse", "--short", "HEAD"],
-                        capture_output=True, text=True).stdout.strip()
+    git("-C", REPO_DIR, "pull", "-q", "origin", "main")
+commit = git("-C", REPO_DIR, "rev-parse", "--short", "HEAD")
 
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", f"{REPO_DIR}[colab]"], check=True)
 sys.path.insert(0, f"{REPO_DIR}/src")

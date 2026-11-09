@@ -216,3 +216,44 @@ def permutation_test(
         xb = np.where(swap, ca, cb).sum(0)
         hits += abs(fn(_as_counts(xa)) - fn(_as_counts(xb))) >= abs(observed) - 1e-12
     return {"diff": observed, "p_value": (hits + 1) / (n_perm + 1)}
+
+
+def _stack_runs(runs: Sequence[Sequence[dict]]) -> tuple[list, np.ndarray]:
+    """Group counts for several runs (seeds) of one system on the same examples: (runs, groups, k)."""
+    keyed = [_grouped_counts(r) for r in runs]
+    keys = keyed[0][0]
+    if any(k != keys for k, _ in keyed):
+        raise ValueError("All runs must be scored on the same examples in the same order.")
+    return keys, np.stack([c for _, c in keyed])
+
+
+def bootstrap_diff_seeds(
+    a_runs: Sequence[Sequence[dict]],
+    b_runs: Sequence[Sequence[dict]],
+    fn: MetricFn,
+    n_boot: int = 2000,
+    seed: int = 0,
+    alpha: float = 0.05,
+) -> dict:
+    """CI of the seed-averaged difference mean_s fn(a_s) - mean_s fn(b_s) (docs/analysis-plan.md §5).
+
+    Each replicate resamples source groups once and scores every seed of both systems on the same
+    resample. A system with one run (a baseline) is passed as a one-element list."""
+    keys_a, ca = _stack_runs(a_runs)
+    keys_b, cb = _stack_runs(b_runs)
+    if keys_a != keys_b:
+        raise ValueError("Systems must be scored on the same examples in the same order.")
+
+    def avg(counts, idx=None):
+        sel = counts if idx is None else counts[:, idx]
+        return float(np.mean([fn(_as_counts(run.sum(0))) for run in sel]))
+
+    rng = np.random.default_rng(seed)
+    point = avg(ca) - avg(cb)
+    diffs = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, ca.shape[1], ca.shape[1])
+        diffs.append(avg(ca, idx) - avg(cb, idx))
+    lo, hi = np.quantile(diffs, [alpha / 2, 1 - alpha / 2])
+    return {"diff": point, "low": float(lo), "high": float(hi),
+            "a_mean": avg(ca), "b_mean": avg(cb), "n_groups": int(ca.shape[1])}

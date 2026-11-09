@@ -1,0 +1,4 @@
+# R4: the best of R1-R3 on dev (docs/analysis-plan.md §4) plus the DeepSeek augmentation set,
+# mixed in up to 25% of training examples. Notebook 06 copies every setting from the chosen
+# base config and only sets the name and augment: true.
+base: null

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .labels import IGNORE_INDEX, encode_example
+from .labels import IGNORE_INDEX, encode_example, token_probs_to_char_probs
 
 
 @dataclass
@@ -36,6 +36,7 @@ class RunConfig:
     seed: int = 42
     evals_per_epoch: int = 0           # 0 = no evaluation during training
     early_stopping_patience: int = 0   # 0 = off
+    select_metric: str = "word_f1"     # checkpoint choice on validation: word_f1 | span_f1 | token_f1
     gradient_checkpointing: bool = True
     save_checkpoints: bool = False
     trust_remote_code: bool = False
@@ -48,19 +49,20 @@ class RunConfig:
         return cls(**yaml.safe_load(Path(path).read_text(encoding="utf-8")))
 
 
-def build_dataset(tokenizer, frame, max_length: int, split_words: bool = False):
-    """Encode a frame with ``prompt``, ``answer`` and ``labels`` columns into a HF Dataset."""
+def encode_frame(tokenizer, frame, max_length: int, split_words: bool = False) -> list[dict]:
+    """Encode every row of a frame with ``prompt``, ``answer`` and ``labels`` columns."""
+    return [encode_example(tokenizer, prompt, answer, spans, max_length, split_words=split_words)
+            for prompt, answer, spans in zip(frame["prompt"], frame["answer"], frame["labels"])]
+
+
+def build_dataset(tokenizer, frame, max_length: int, split_words: bool = False, encodings=None):
+    """HF Dataset of input ids, attention mask and labels (pass ``encodings`` to reuse them)."""
     from datasets import Dataset
 
-    rows = {"input_ids": [], "attention_mask": [], "labels": []}
-    truncated = 0
-    for prompt, answer, spans in zip(frame["prompt"], frame["answer"], frame["labels"]):
-        enc = encode_example(tokenizer, prompt, answer, spans, max_length, split_words=split_words)
-        for k in rows:
-            rows[k].append(enc[k])
-        truncated += enc["truncated"]
+    encodings = encodings if encodings is not None else encode_frame(tokenizer, frame, max_length, split_words)
+    rows = {k: [enc[k] for enc in encodings] for k in ("input_ids", "attention_mask", "labels")}
     ds = Dataset.from_dict(rows)
-    ds.info.description = json.dumps({"truncated": truncated})
+    ds.info.description = json.dumps({"truncated": int(sum(enc["truncated"] for enc in encodings))})
     return ds
 
 
@@ -97,6 +99,13 @@ def _trainer_class():
             super().__init__(*args, **kwargs)
             self.loss_kind, self.loss_weights, self.focal_gamma = loss_kind, loss_weights, focal_gamma
 
+        def _get_eval_sampler(self, eval_dataset):
+            # group_by_length would also shuffle evaluation by length; word metrics need the
+            # predictions in example order to map tokens back to each answer.
+            from torch.utils.data import SequentialSampler
+
+            return SequentialSampler(eval_dataset) if eval_dataset is not None else None
+
         def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
             labels = inputs.pop("labels")
             outputs = model(**inputs)
@@ -127,6 +136,34 @@ def token_metrics(eval_pred) -> dict:
     return {"token_f1": f1, "token_precision": prec, "token_recall": rec, "token_auroc": auroc}
 
 
+def word_metrics_fn(frame, encodings, threshold: float = 0.5):
+    """``compute_metrics`` for the Trainer: token metrics plus our word, span and example
+    metrics on the validation answers (predictions mapped back to characters, then words)."""
+    from .metrics import evaluate
+    from .postprocess import char_probs_to_spans
+
+    answers = list(frame["answer"])
+    golds = [list(x) for x in frame["labels"]]
+    tasks = list(frame["task_type"]) if "task_type" in frame else [None] * len(answers)
+
+    def compute(eval_pred) -> dict:
+        probs, labels = eval_pred
+        out = token_metrics((probs, labels))
+        records = []
+        for i, enc in enumerate(encodings):
+            n = len(enc["input_ids"])
+            char_probs = token_probs_to_char_probs(len(answers[i]), enc["answer_offsets"], probs[i, :n])
+            records.append({"answer": answers[i], "gold_spans": golds[i], "task_type": tasks[i],
+                            "pred_spans": char_probs_to_spans(answers[i], char_probs, threshold),
+                            "char_probs": char_probs})
+        m = evaluate(records, by_task=False)["overall"]
+        out.update(word_f1=m["word"]["f1"], span_f1=m["span"]["f1"], example_f1=m["example"]["f1"],
+                   word_auroc=m.get("word_auroc", float("nan")))
+        return out
+
+    return compute
+
+
 def train(cfg: RunConfig, train_frame, val_frame, output_dir: str | Path) -> dict:
     """Train one run; returns the trainer, tokenizer, model and a history/summary dict."""
     import torch
@@ -145,7 +182,8 @@ def train(cfg: RunConfig, train_frame, val_frame, output_dir: str | Path) -> dic
 
     t0 = time.perf_counter()
     train_ds = build_dataset(tokenizer, train_frame, cfg.max_length, cfg.split_words)
-    val_ds = build_dataset(tokenizer, val_frame, cfg.max_length, cfg.split_words) if val_frame is not None else None
+    val_enc = encode_frame(tokenizer, val_frame, cfg.max_length, cfg.split_words) if val_frame is not None else None
+    val_ds = build_dataset(tokenizer, val_frame, cfg.max_length, encodings=val_enc) if val_enc is not None else None
     encode_sec = time.perf_counter() - t0
     weights = class_weights(train_ds) if cfg.loss == "weighted_ce" else None
 
@@ -173,7 +211,7 @@ def train(cfg: RunConfig, train_frame, val_frame, output_dir: str | Path) -> dic
         save_steps=eval_steps,
         save_total_limit=2,
         load_best_model_at_end=evaluate and cfg.save_checkpoints,
-        metric_for_best_model="token_f1",
+        metric_for_best_model=cfg.select_metric,
         greater_is_better=True,
         logging_steps=max(1, steps_per_epoch // 50),
         report_to="none",
@@ -187,7 +225,7 @@ def train(cfg: RunConfig, train_frame, val_frame, output_dir: str | Path) -> dic
     trainer = _trainer_class()(
         model=model, args=args, train_dataset=train_ds, eval_dataset=val_ds if evaluate else None,
         data_collator=DataCollatorForTokenClassification(tokenizer, pad_to_multiple_of=8),
-        compute_metrics=token_metrics if evaluate else None,
+        compute_metrics=word_metrics_fn(val_frame, val_enc) if evaluate else None,
         preprocess_logits_for_metrics=_preprocess_logits if evaluate else None,
         callbacks=callbacks, loss_kind=cfg.loss, loss_weights=weights, focal_gamma=cfg.focal_gamma,
     )

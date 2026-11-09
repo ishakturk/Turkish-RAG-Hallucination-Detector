@@ -118,7 +118,7 @@ Reported per task (QA, Data2txt, Summary) and overall. We also run the `lettuced
 | Data | cleaned RAGTruth-TR train (minus validation) |
 | Validation | 5% of train sources, grouped (for early stopping) |
 | Model choice | best checkpoint by validation; final comparison and thresholds on dev-from-test |
-| Checkpointing | to Drive every 500 steps plus best; `resume_from_checkpoint` after disconnects |
+| Checkpointing | checkpoints on the Colab disk (best + latest); after each run, predictions, bf16 weights and a result file go to Drive and the run is skipped on rerun, so a disconnect loses at most the run in progress (~1 h). Drive weights: every seed while > 8 GB is free, otherwise seed 42 only |
 | Seeds | 3 seeds (42, 1234, 2026) for R1–R4: training is cheap and pilot differences are within single-seed noise |
 | Tokenization | default tokenizer output; word-split input for TabiBERT gave no gain in the pilot and is dropped |
 
@@ -272,7 +272,7 @@ Week boundaries run Saturday–Friday. Each phase has an exit criterion and a **
 | `04_augmentation` | Full DeepSeek generation (~4,000), validation, rejection stats, examples; Turkish augmentation set on Drive | `results/04_augmentation.json` |
 | `05b_native_answers` | Generate answers with Qwen (vLLM) + DeepSeek; completeness checks; labeling CSV | `data/native/to_label.csv` |
 | Native labeling round 1 | User labels ~100 examples blind | partial CSV |
-| `06_train` (code) | Config-driven training notebook; test-run R1 for 200 steps | `results/06_r1_smoke.json` |
+| `06_train` (code) | Config-driven training notebook (`configs/r0–r4.yaml`), CPU dry run of every path | `results/06_train.json` |
 
 **Exit:** cleaned data frozen, augmentation set ready, `06_train` works, half the native set labeled.
 **Cut line:** if augmentation slips, start Phase 3 anyway (R0–R3 don't need it). R4 moves into Phase 3's second half.
@@ -465,6 +465,12 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
   - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
   - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
+- **`06_train` and `docs/analysis-plan.md` written (9 Nov).**
+  - Configs `configs/r0.yaml`–`r3.yaml`; R4 copies the chosen base and adds augmentation (≤ a third of the train size, faithful/error pairs kept together, fixed subset).
+  - Checkpoint choice is now on **validation word F1**, as planned: `hdtr.train.word_metrics_fn` maps token predictions back to characters and words. The Trainer's evaluation sampler is forced to sequential order, because `group_by_length` also shuffles evaluation in transformers 4.57, which would have mis-aligned predictions and answers.
+  - New `hdtr.evaluation` (records, dev threshold tuning, compact scores) and `metrics.bootstrap_diff_seeds` (seed-averaged bootstrap, analysis plan §5). 52 tests pass.
+  - Out of memory: the run is retried automatically with half the batch and double the accumulation. The longest batch comes first with `group_by_length`, so this happens in the first minute.
+  - Longest answer alone: 803 tokens (TabiBERT) / 1,046 (mmBERT), so answer-only truncation is impossible at 4,096.
 - Notebook `04_augmentation` and `hdtr.augment` written (spec in §2.6), with 11 unit tests (49 in total). A local dry run of both modes with a fake DeepSeek client passes: resume, retries, budget accounting, review cards and CSV, parquet output. Title split committed as `data/mwqa_split.json` (augmentation 4,003 rows / 540 articles; native pool 1,003 rows / 133 articles).
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 - **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
@@ -495,5 +501,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
 ## 9. Immediate next steps (from 9 Nov)
 1. ~~User spot check~~ done (see the progress log).
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
-4. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
-5. Native test set: context selection from the reserved titles, labeling guide, answer generation (`05b`).
+3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
+4. **User:** run `06_train` group by group on an L4: `["r1"]` → `["r2"]` → `["r3"]` → `["r0"]` (~1–4 h per group). Send `results/06_train.json` after each group or at the end.
+5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
+6. After R1–R3: apply the R4 base rule (analysis plan §4.3), then the **user** runs `["r4"]`.

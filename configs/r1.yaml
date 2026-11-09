@@ -1,0 +1,14 @@
+# R1: TabiBERT (Turkish, 149M) with our recipe: cleaned data, class-weighted CE, lr 3e-5,
+# up to 4 epochs, evaluation every half epoch, early stopping on validation word F1.
+name: r1_tabibert
+model_id: boun-tabilab/TabiBERT
+lr: 3.0e-5
+epochs: 4
+batch_size: 8
+grad_accum: 2
+loss: weighted_ce
+evals_per_epoch: 2
+early_stopping_patience: 2
+save_checkpoints: true
+select_metric: word_f1
+extra: {train_split: train_clean, val_split: validation_clean, augment: false, params_m: 149}

@@ -1,0 +1,12 @@
+# R0: TabiBERT with the "Newmind-style" recipe (docs/technical-roadmap.md §2.3): fixed 6 epochs,
+# lr 1e-5, batch 4, plain cross-entropy, no validation (last checkpoint), uncleaned train data.
+name: r0_tabibert_newmind
+model_id: boun-tabilab/TabiBERT
+lr: 1.0e-5
+epochs: 6
+batch_size: 4
+grad_accum: 1
+loss: ce
+warmup_ratio: 0.0
+evals_per_epoch: 0
+extra: {train_split: train, val_split: null, augment: false, params_m: 149}

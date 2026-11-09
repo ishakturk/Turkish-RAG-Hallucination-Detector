@@ -72,3 +72,26 @@ def test_paired_tests_detect_clear_difference():
 def test_paired_tests_require_same_groups():
     with pytest.raises(ValueError):
         bootstrap_diff(_system(0.8, n=6), _system(0.8, n=9), metric("example"))
+
+
+def test_bootstrap_diff_seeds_matches_single_run_and_averages():
+    from hdtr.metrics import bootstrap_diff, bootstrap_diff_seeds, metric
+
+    def rec(group, gold, pred):
+        a = "Lig 1927 yılında kuruldu."
+        return {"answer": a, "group": group, "gold_spans": [{"start": 4, "end": 8}] if gold else [],
+                "pred_spans": [{"start": 4, "end": 8}] if pred else []}
+
+    good = [rec(g, g % 2 == 0, g % 2 == 0) for g in range(20)]
+    bad = [rec(g, g % 2 == 0, True) for g in range(20)]
+    fn = metric("example", "f1")
+    single = bootstrap_diff(good, bad, fn, n_boot=200)
+    multi = bootstrap_diff_seeds([good], [bad], fn, n_boot=200)
+    assert abs(single["diff"] - multi["diff"]) < 1e-12 and abs(single["low"] - multi["low"]) < 1e-12
+    two = bootstrap_diff_seeds([good, bad], [bad], fn, n_boot=200)
+    assert abs(two["a_mean"] - (1.0 + fn_val(bad, fn)) / 2) < 1e-9
+
+
+def fn_val(records, fn):
+    from hdtr.metrics import record_counts, sum_counts
+    return fn(sum_counts(record_counts(r) for r in records))

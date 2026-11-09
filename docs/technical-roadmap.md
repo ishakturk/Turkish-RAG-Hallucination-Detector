@@ -108,18 +108,19 @@ Reported per task (QA, Data2txt, Summary) and overall. We also run the `lettuced
 - Paired permutation test (10,000 permutations) for our best model vs the best baseline.
 
 ### 2.3 Training recipe ("our recipe")
-| Setting | Value (the pilot may adjust lr and loss) |
+| Setting | Value (updated after the 03 pilot, 9 Nov) |
 |---|---|
 | Optimizer | AdamW, weight decay 0.01 |
-| LR | 2e-5 (pilot compares 1e-5 / 3e-5), 6% warmup, linear decay |
+| LR | 3e-5 for every run (best in the pilot), 6% warmup, linear decay |
 | Epochs | up to 4, evaluated every ½ epoch, early stopping with patience 2 on validation word-F1 |
-| Loss | class-weighted cross-entropy (weight for class 1 = √(neg/pos)); focal loss (γ=2) tried in the pilot |
+| Loss | class-weighted cross-entropy (weight for class 1 = √(neg/pos)); focal loss was worse in the pilot and is dropped |
 | Batch | effective 16 (per-device batch × gradient accumulation), length-grouped sampling, gradient checkpointing if out of memory |
 | Data | cleaned RAGTruth-TR train (minus validation) |
 | Validation | 5% of train sources, grouped (for early stopping) |
 | Model choice | best checkpoint by validation; final comparison and thresholds on dev-from-test |
 | Checkpointing | to Drive every 500 steps plus best; `resume_from_checkpoint` after disconnects |
-| Seeds | 42 for all runs; a second seed (1234) for R1 and the final model |
+| Seeds | 3 seeds (42, 1234, 2026) for R1–R4: training is cheap and pilot differences are within single-seed noise |
+| Tokenization | default tokenizer output; word-split input for TabiBERT gave no gain in the pilot and is dropped |
 
 **R0 ("Newmind-style") recipe:** 6 fixed epochs, lr 1e-5, batch 4, plain cross-entropy, no validation (last checkpoint used), uncleaned data. If compute is tight, R0 is capped at the same number of optimizer steps as R1 and this is documented.
 
@@ -276,12 +277,12 @@ Week boundaries run Saturday–Friday. Each phase has an exit criterion and a **
 | R0 | Old-style recipe (capped steps if needed) | `results/06_r0.json` |
 | Selection | Best of R1–R3 by **dev** example F1 + span F1 (tie → smaller model) | decision noted in `docs/analysis-plan.md` |
 | R4 | Best run + augmentation (mixed into train, ≤ 25% of examples) | `results/06_r4.json` |
-| Second seed | R1 and the final model, seed 1234 | seed-variance numbers |
+| Seeds | 3 seeds for R1–R4; report mean ± sd and select on the mean | seed-variance numbers |
 | `07_postprocess` | Word snapping, merging, threshold tuning on dev for **all** systems (baselines included) | `results/07_thresholds.json` |
 | Native labeling | Round 2 (~100); Claude labels all; κ; adjudication; span edits | `data/native/native_test_v1.jsonl` |
 
 **Exit:** final model chosen; thresholds frozen; native set final.
-**Cut line, in drop order:** second seed → R0 at full length (keep the capped version) → R2 → R4 (augmentation becomes "future work"). **R1, R3 and the baselines are never cut.**
+**Cut line, in drop order:** third seed → R0 at full length (keep the capped version) → R2 → R4 (augmentation becomes "future work"). **R1, R3 and the baselines are never cut.**
 
 ### Phase 4: Final evaluation, visuals, report (Sat 28 Nov – Fri 4 Dec)
 | Task | Content | Output |
@@ -354,7 +355,11 @@ Week boundaries run Saturday–Friday. Each phase has an exit criterion and a **
 | Post-processing, final eval, t-SNE, quick-mode check | 5 |
 | **Total** | **~54** (≈45% buffer) |
 
-These are estimates. The pilot replaces them with measured numbers on 13 Nov. Rules: pick the runtime type before starting, disconnect as soon as a run ends (idle time burns units), and watch the Resources tab.
+**Measured in the 03 pilot (L4, bf16, 9 Nov):** TabiBERT ~18.5k tokens/s, 3.4 GB peak; mmBERT-base ~15.2k tokens/s, 5.9 GB; mmBERT-small ~29.7k tokens/s.
+One full-train epoch is ~12 min for TabiBERT and ~17 min for mmBERT-base, so a 4-epoch run with evaluation is ~1 h (≈ 1.7–2.2 CU).
+Revised Phase 3 total with 3 seeds for R1–R4 plus R0: **~25 CU**, well under the 60 CU in the table above. A100 is not needed.
+
+The table above is the original estimate. Rules: pick the runtime type before starting, disconnect as soon as a run ends (idle time burns units), and watch the Resources tab.
 
 ## 7. Risks
 | Risk | Signal | Response |
@@ -432,8 +437,33 @@ These are estimates. The pilot replaces them with measured numbers on 13 Nov. Ru
   - Speed: 0.018–0.047 s/example on L4.
 - **Go/no-go (Phase 1):** baselines ✓, alignment ✓, compute ✓ (training is cheap). Still open: the DeepSeek 30-example quality gate. **Decision: go.**
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
+- **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
 
-## 9. Immediate next steps (this weekend)
-1. **User:** create the private GitHub repo; add `GH_TOKEN` to Colab Secrets; create `MyDrive/hdtr/`; get the DeepSeek key into Colab Secrets when ready.
-2. **Claude:** scaffold the repo (`pyproject`, `hdtr` package, `labels.py`, `metrics.py`, tests) and write `00_setup_smoke.ipynb` and `01_data_audit.ipynb`.
-3. **User:** run `00`, then `01`, and send back `results/00_smoke.json` and `results/01_audit.json`.
+  | Run | ex-F1 | span-F1 | ex-AUROC | word-AUROC | span-F1 at best τ | min / QA epoch | peak GB |
+  |---|---|---|---|---|---|---|---|
+  | TabiBERT lr 3e-5 | **0.734** | **0.667** | **0.883** | 0.930 | 0.668 (0.4) | 2.2 | 3.4 |
+  | mmBERT-small | 0.702 | 0.664 | 0.869 | 0.918 | 0.664 (0.5) | 1.9 | 3.0 |
+  | KR Labs v2 mmBERT* | 0.716 | 0.661 | 0.877 | **0.937** | 0.667 (0.4) | 3.6 | 5.9 |
+  | mmBERT-base | 0.704 | 0.658 | 0.868 | 0.925 | 0.662 (0.4) | 3.6 | 5.9 |
+  | TabiBERT lr 1e-5 | 0.711 | 0.640 | 0.854 | 0.917 | 0.640 (0.5) | 2.2 | 3.4 |
+  | TabiBERT lr 2e-5 | 0.690 | 0.638 | 0.866 | 0.928 | 0.638 (0.5) | 2.6 | 3.4 |
+  | MoganBERT-TR | 0.683 | 0.637 | 0.872 | 0.923 | 0.639 (0.4) | 2.2 | 3.3 |
+  | TabiBERT word-split | 0.707 | 0.626 | 0.874 | 0.916 | 0.626 (0.4) | 2.7 | 3.5 |
+  | TabiBERT focal | 0.574 | 0.480 | 0.847 | 0.912 | 0.618 (0.4) | 2.2 | 3.4 |
+
+  \* KR Labs v2 saw the English versions of our validation answers (validation is carved from RAGTruth train), so its row is optimistic. It is compared on dev only.
+  - **Every base model is in the same band (span F1 0.63–0.67).** With one seed and 82 hallucinated answers, gaps below ~0.03 span F1 are not reliable. So all three planned bases go to full runs, with 3 seeds each.
+  - **Learning rate:** 3e-5 > 2e-5 ≈ 1e-5 on every metric. One epoch favours a higher rate, but early stopping protects longer runs, so 3e-5 is used for all runs.
+  - **Focal loss is dropped.** It shifts probabilities down (span F1 0.48 at τ 0.5, 0.62 at τ 0.4) and has lower AUROC than weighted CE.
+  - **Word-split input is dropped.** It gave no gain (0.626 vs 0.638) and costs 19% more tokens. For the report: the cross-word tokens (9% of TabiBERT tokens) do not measurably hurt span detection after fine-tuning.
+  - **MoganBERT-TR stays pilot-only.** It ties TabiBERT, short of the >1 F1 needed to replace it.
+  - **mmBERT-small equals mmBERT-base on QA** at half the cost. It is an optional cheap extra in Phase 3; the "tie → smaller model" rule applies.
+  - **KR Labs v2 starts far ahead:** first logged loss 0.78 vs 2.25 for plain mmBERT-base with the same architecture, and it has the lowest final loss and the best word AUROC. Its hallucination pretraining transfers, but part of the head start may be its English exposure to our train set.
+  - **Training is much cheaper than planned** (see §6): ~12 min per full epoch for TabiBERT.
+  - The pilot covers QA only. Summary, the weak task in the baselines, is first measured in the full runs.
+
+## 9. Immediate next steps (from 9 Nov)
+1. **Claude:** write `04_augmentation` with the DeepSeek 30-example quality gate first (Phase 1's last open item), then the full ~4,000 batch.
+2. **User:** run the 30-example gate, review the examples, and send back the results.
+3. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
+4. Native test set: context selection, labeling guide and answer generation (`05b`).

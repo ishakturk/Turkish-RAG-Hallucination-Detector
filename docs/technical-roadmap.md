@@ -192,6 +192,13 @@ The generation spec below applies to whichever generator is used.
 - **Cost:** about 4,000 calls × ~2k input + ~0.4k output tokens ≈ 8M input / 1.6M output tokens. Expect a few US dollars; check current DeepSeek pricing first.
 - **Week-1 check:** read DeepSeek's API terms on using outputs for training a model, and record the result in `verification`.
 - **Engineering:** async calls with a concurrency limit, retry with backoff, results appended to a JSONL on Drive (so a crash resumes where it stopped), `temperature` 0.7, fixed seed list, model name and date logged per row.
+- **As implemented (`hdtr.augment`, notebook 04, 9 Nov):**
+  - The detector input copies the **RAGTruth-TR templates**: QA = question + three passages (the ~2,500-character context window around the answer, split into 3 contiguous parts) with the same instruction wording and endings; Summary = "Aşağıdaki haberi N kelimeyle özetleyin:" with N = 50–130. Wording variants are sampled at RAGTruth-TR's rates, so the template cannot reveal which rows are augmented. The generator answers exactly this prompt.
+  - Reference/link/category sections are cut. Rows whose answer sits in a list or category line, or whose window is under 400 characters, are skipped (173 of 4,003), leaving **3,830 rows → ~5,700 records** (every faithful answer plus ~1,900 versions with errors).
+  - Error types are sampled 40% unsupported claim, 20% each entity, number and contradiction (RAGTruth has more baseless than conflict spans). Labels: unsupported → "Evident Baseless Info", the others → "Evident Conflict".
+  - Extra validation: every number in the faithful answer must appear in the prompt (no outside knowledge); refusals are rejected; the tag count must equal the listed errors; a tagged span of ≥4 words that appears verbatim in the context is rejected (short entity or number swaps may reuse context words).
+  - A row gets up to 2 attempts. A $4 budget cap (counted at peak price) stops the full run early.
+  - The multi-wiki-qa `id` is the article URL and repeats, so plans are keyed by row index.
 
 ### 2.7 Native Turkish test set (D7)
 - **Contexts (~200):** ~150 from the held-out multi-wiki-qa `tr` pool (Wikipedia), ~50 from `mtntasci/turkish-legal-rag` (CC BY 4.0, a second domain).
@@ -436,6 +443,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - Example F1 at 0.5 hides calibration differences. Thresholds will be tuned per system on dev (notebook 07).
   - Speed: 0.018–0.047 s/example on L4.
 - **Go/no-go (Phase 1):** baselines ✓, alignment ✓, compute ✓ (training is cheap). Still open: the DeepSeek 30-example quality gate. **Decision: go.**
+- Notebook `04_augmentation` and `hdtr.augment` written (spec in §2.6), with 11 unit tests (49 in total). A local dry run of both modes with a fake DeepSeek client passes: resume, retries, budget accounting, review cards and CSV, parquet output. Title split committed as `data/mwqa_split.json` (augmentation 4,003 rows / 540 articles; native pool 1,003 rows / 133 articles).
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 - **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
 
@@ -463,7 +471,8 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - The pilot covers QA only. Summary, the weak task in the baselines, is first measured in the full runs.
 
 ## 9. Immediate next steps (from 9 Nov)
-1. **Claude:** write `04_augmentation` with the DeepSeek 30-example quality gate first (Phase 1's last open item), then the full ~4,000 batch.
-2. **User:** run the 30-example gate, review the examples, and send back the results.
-3. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
-4. Native test set: context selection, labeling guide and answer generation (`05b`).
+1. **User:** run `04_augmentation` with `MODE = "gate"` (CPU runtime, ~$0.03). Review the 30 cards, fill in `gate_review.csv`, and send it back with `results/04_gate.json`.
+2. **Claude:** review the same 30 independently, then fix the prompt or validation if needed.
+3. If ≥85% are acceptable: **user** runs `MODE = "full"`, `GATE_PASSED = True`, off-peak (~$1.35).
+4. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
+5. Native test set: context selection from the reserved titles, labeling guide, answer generation (`05b`).

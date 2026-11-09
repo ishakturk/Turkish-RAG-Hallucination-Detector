@@ -2,6 +2,8 @@
 
 Cells start with ``# %%`` (code) or ``# %% [markdown]`` (markdown; lines are un-commented).
 The .py files are the reviewed source of truth; the .ipynb files are what Colab opens.
+A line ``# colab-runtime: cpu`` anywhere in the source makes the notebook open on a CPU runtime
+(no GPU compute units); otherwise it asks for an L4.
 """
 
 from __future__ import annotations
@@ -37,7 +39,7 @@ def parse(text: str) -> list[dict]:
     return [c for c in cells if c["lines"]]
 
 
-def to_ipynb(cells: list[dict]) -> dict:
+def to_ipynb(cells: list[dict], gpu: bool = True) -> dict:
     nb_cells = []
     for cell in cells:
         source = [line + "\n" for line in cell["lines"]]
@@ -46,14 +48,17 @@ def to_ipynb(cells: list[dict]) -> dict:
         if cell["type"] == "code":
             entry.update(execution_count=None, outputs=[])
         nb_cells.append(entry)
+    metadata = {
+        "colab": {"provenance": []},
+        "kernelspec": {"display_name": "Python 3", "name": "python3"},
+        "language_info": {"name": "python"},
+    }
+    if gpu:
+        metadata["accelerator"] = "GPU"
+        metadata["colab"]["gpuType"] = "L4"
     return {
         "cells": nb_cells,
-        "metadata": {
-            "accelerator": "GPU",
-            "colab": {"provenance": [], "gpuType": "L4"},
-            "kernelspec": {"display_name": "Python 3", "name": "python3"},
-            "language_info": {"name": "python"},
-        },
+        "metadata": metadata,
         "nbformat": 4,
         "nbformat_minor": 0,
     }
@@ -62,7 +67,8 @@ def to_ipynb(cells: list[dict]) -> dict:
 def main(names: list[str]) -> None:
     sources = sorted(SRC.glob("*.py")) if not names else [SRC / f"{n}.py" for n in names]
     for src in sources:
-        nb = to_ipynb(parse(src.read_text(encoding="utf-8")))
+        text = src.read_text(encoding="utf-8")
+        nb = to_ipynb(parse(text), gpu="# colab-runtime: cpu" not in text)
         dest = OUT / f"{src.stem}.ipynb"
         dest.write_text(json.dumps(nb, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"{src.relative_to(ROOT)} -> {dest.relative_to(ROOT)} ({len(nb['cells'])} cells)")

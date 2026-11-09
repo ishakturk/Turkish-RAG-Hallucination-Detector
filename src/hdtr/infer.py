@@ -22,12 +22,12 @@ def load_detector(model_id: str, dtype=None, device: str | None = None, **kwargs
     return tokenizer, model.to(device).eval()
 
 
-def predict_char_probs(model, tokenizer, prompt: str, answer: str,
-                       max_length: int = 8192) -> tuple[np.ndarray, bool]:
+def predict_char_probs(model, tokenizer, prompt: str, answer: str, max_length: int = 8192,
+                       split_words: bool = False) -> tuple[np.ndarray, bool]:
     """Probability that each answer character is hallucinated, and whether the prompt was cut."""
     import torch
 
-    enc = encode_example(tokenizer, prompt, answer, (), max_length)
+    enc = encode_example(tokenizer, prompt, answer, (), max_length, split_words=split_words)
     device = next(model.parameters()).device
     with torch.no_grad():
         logits = model(
@@ -38,11 +38,12 @@ def predict_char_probs(model, tokenizer, prompt: str, answer: str,
     return token_probs_to_char_probs(len(answer), enc["answer_offsets"], token_probs), enc["truncated"]
 
 
-def predict_many(model, tokenizer, rows, max_length: int = 8192) -> tuple[list[np.ndarray], dict]:
+def predict_many(model, tokenizer, rows, max_length: int = 8192,
+                 split_words: bool = False) -> tuple[list[np.ndarray], dict]:
     """Predict for an iterable of (prompt, answer) pairs; returns probabilities and timing stats."""
     probs, truncated, start = [], 0, time.perf_counter()
     for prompt, answer in rows:
-        p, cut = predict_char_probs(model, tokenizer, prompt, answer, max_length)
+        p, cut = predict_char_probs(model, tokenizer, prompt, answer, max_length, split_words)
         probs.append(p)
         truncated += cut
     elapsed = time.perf_counter() - start

@@ -1,0 +1,619 @@
+{
+  "notebook": "02_baselines",
+  "commit": "42b5a09",
+  "time": "2026-11-09 08:02",
+  "gpu": "NVIDIA L4",
+  "systems": {
+    "newmind_modernbert_tr": {
+      "model_id": "newmindai/ModernBERT-tr-uncased-stsb-HD",
+      "timing": {
+        "n": 2700,
+        "seconds": 107.71478457399996,
+        "sec_per_example": 0.039894364657037024,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.6683,
+          "example_p": 0.6733,
+          "example_r": 0.6634,
+          "example_macro_f1": 0.7339,
+          "word_f1": 0.4678,
+          "word_macro_f1": 0.7217,
+          "span_f1": 0.4667,
+          "span_p": 0.4739,
+          "span_r": 0.4597,
+          "example_auroc": 0.8014,
+          "word_auroc": 0.8719,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.8255,
+          "example_p": 0.8151,
+          "example_r": 0.8362,
+          "example_macro_f1": 0.7488,
+          "word_f1": 0.477,
+          "word_macro_f1": 0.7263,
+          "span_f1": 0.4754,
+          "span_p": 0.5035,
+          "span_r": 0.4502,
+          "example_auroc": 0.8157,
+          "word_auroc": 0.8807,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.6275,
+          "example_p": 0.5246,
+          "example_r": 0.7805,
+          "example_macro_f1": 0.7401,
+          "word_f1": 0.5299,
+          "word_macro_f1": 0.7481,
+          "span_f1": 0.5277,
+          "span_p": 0.4563,
+          "span_r": 0.6256,
+          "example_auroc": 0.8684,
+          "word_auroc": 0.9181,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.2,
+          "example_p": 0.3182,
+          "example_r": 0.1458,
+          "example_macro_f1": 0.5034,
+          "word_f1": 0.1731,
+          "word_macro_f1": 0.5791,
+          "span_f1": 0.1764,
+          "span_p": 0.4185,
+          "span_r": 0.1117,
+          "example_auroc": 0.588,
+          "word_auroc": 0.7519,
+          "n": 180
+        }
+      }
+    },
+    "newmind_turkembed4sts": {
+      "model_id": "newmindai/TurkEmbed4STS-HD",
+      "timing": {
+        "n": 2700,
+        "seconds": 49.88548277099994,
+        "sec_per_example": 0.018476104729999977,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.7003,
+          "example_p": 0.724,
+          "example_r": 0.678,
+          "example_macro_f1": 0.763,
+          "word_f1": 0.4811,
+          "word_macro_f1": 0.728,
+          "span_f1": 0.4784,
+          "span_p": 0.4614,
+          "span_r": 0.4967,
+          "example_auroc": 0.8337,
+          "word_auroc": 0.8804,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.8198,
+          "example_p": 0.8585,
+          "example_r": 0.7845,
+          "example_macro_f1": 0.765,
+          "word_f1": 0.4645,
+          "word_macro_f1": 0.7192,
+          "span_f1": 0.4542,
+          "span_p": 0.4611,
+          "span_r": 0.4476,
+          "example_auroc": 0.8423,
+          "word_auroc": 0.8632,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.6596,
+          "example_p": 0.5849,
+          "example_r": 0.7561,
+          "example_macro_f1": 0.7696,
+          "word_f1": 0.5747,
+          "word_macro_f1": 0.772,
+          "span_f1": 0.577,
+          "span_p": 0.4963,
+          "span_r": 0.689,
+          "example_auroc": 0.8737,
+          "word_auroc": 0.9302,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.4198,
+          "example_p": 0.5152,
+          "example_r": 0.3542,
+          "example_macro_f1": 0.6256,
+          "word_f1": 0.2338,
+          "word_macro_f1": 0.6078,
+          "span_f1": 0.2336,
+          "span_p": 0.296,
+          "span_r": 0.1929,
+          "example_auroc": 0.7015,
+          "word_auroc": 0.8084,
+          "n": 180
+        }
+      }
+    },
+    "newmind_eurobert_tr": {
+      "model_id": "newmindai/lettucedect-210m-eurobert-tr-v1",
+      "timing": {
+        "n": 2700,
+        "seconds": 57.056422612000006,
+        "sec_per_example": 0.021132008374814815,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.6684,
+          "example_p": 0.7257,
+          "example_r": 0.6195,
+          "example_macro_f1": 0.7442,
+          "word_f1": 0.4267,
+          "word_macro_f1": 0.701,
+          "span_f1": 0.4203,
+          "span_p": 0.4502,
+          "span_r": 0.3941,
+          "example_auroc": 0.8202,
+          "word_auroc": 0.8589,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.8326,
+          "example_p": 0.8762,
+          "example_r": 0.7931,
+          "example_macro_f1": 0.7832,
+          "word_f1": 0.4658,
+          "word_macro_f1": 0.7212,
+          "span_f1": 0.4619,
+          "span_p": 0.5119,
+          "span_r": 0.4208,
+          "example_auroc": 0.8638,
+          "word_auroc": 0.8758,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.5647,
+          "example_p": 0.5455,
+          "example_r": 0.5854,
+          "example_macro_f1": 0.7151,
+          "word_f1": 0.4799,
+          "word_macro_f1": 0.7235,
+          "span_f1": 0.4722,
+          "span_p": 0.4457,
+          "span_r": 0.5022,
+          "example_auroc": 0.8396,
+          "word_auroc": 0.8945,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.2973,
+          "example_p": 0.4231,
+          "example_r": 0.2292,
+          "example_macro_f1": 0.5577,
+          "word_f1": 0.1234,
+          "word_macro_f1": 0.5527,
+          "span_f1": 0.1128,
+          "span_p": 0.1813,
+          "span_r": 0.0818,
+          "example_auroc": 0.6387,
+          "word_auroc": 0.738,
+          "n": 180
+        }
+      }
+    },
+    "newmind_bge_m3": {
+      "model_id": "newmindai/bge-m3-HD",
+      "timing": {
+        "n": 2700,
+        "seconds": 64.75428810000005,
+        "sec_per_example": 0.023983069666666686,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.681,
+          "example_p": 0.756,
+          "example_r": 0.6195,
+          "example_macro_f1": 0.7563,
+          "word_f1": 0.4406,
+          "word_macro_f1": 0.7087,
+          "span_f1": 0.4397,
+          "span_p": 0.4926,
+          "span_r": 0.3971,
+          "example_auroc": 0.8282,
+          "word_auroc": 0.8807,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.8416,
+          "example_p": 0.8857,
+          "example_r": 0.8017,
+          "example_macro_f1": 0.7949,
+          "word_f1": 0.4836,
+          "word_macro_f1": 0.7309,
+          "span_f1": 0.4729,
+          "span_p": 0.5608,
+          "span_r": 0.4088,
+          "example_auroc": 0.8471,
+          "word_auroc": 0.8859,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.6222,
+          "example_p": 0.5714,
+          "example_r": 0.6829,
+          "example_macro_f1": 0.7481,
+          "word_f1": 0.4793,
+          "word_macro_f1": 0.723,
+          "span_f1": 0.4876,
+          "span_p": 0.4544,
+          "span_r": 0.526,
+          "example_auroc": 0.865,
+          "word_auroc": 0.9085,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.1935,
+          "example_p": 0.4286,
+          "example_r": 0.125,
+          "example_macro_f1": 0.5129,
+          "word_f1": 0.1245,
+          "word_macro_f1": 0.5548,
+          "span_f1": 0.1259,
+          "span_p": 0.3522,
+          "span_r": 0.0766,
+          "example_auroc": 0.6556,
+          "word_auroc": 0.7976,
+          "n": 180
+        }
+      }
+    },
+    "newmind_ettin_150m": {
+      "model_id": "newmindai/ettin-encoder-150M-TR-HD",
+      "timing": {
+        "n": 2700,
+        "seconds": 126.40321609799992,
+        "sec_per_example": 0.04681600596222219,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.61,
+          "example_p": 0.7647,
+          "example_r": 0.5073,
+          "example_macro_f1": 0.715,
+          "word_f1": 0.3841,
+          "word_macro_f1": 0.6799,
+          "span_f1": 0.3747,
+          "span_p": 0.4532,
+          "span_r": 0.3193,
+          "example_auroc": 0.7938,
+          "word_auroc": 0.8569,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.76,
+          "example_p": 0.9048,
+          "example_r": 0.6552,
+          "example_macro_f1": 0.73,
+          "word_f1": 0.3731,
+          "word_macro_f1": 0.6747,
+          "span_f1": 0.3692,
+          "span_p": 0.5183,
+          "span_r": 0.2868,
+          "example_auroc": 0.8329,
+          "word_auroc": 0.8787,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.5542,
+          "example_p": 0.5476,
+          "example_r": 0.561,
+          "example_macro_f1": 0.7103,
+          "word_f1": 0.4631,
+          "word_macro_f1": 0.7145,
+          "span_f1": 0.4444,
+          "span_p": 0.4209,
+          "span_r": 0.4707,
+          "example_auroc": 0.7978,
+          "word_auroc": 0.888,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.1724,
+          "example_p": 0.5,
+          "example_r": 0.1042,
+          "example_macro_f1": 0.5067,
+          "word_f1": 0.1008,
+          "word_macro_f1": 0.543,
+          "span_f1": 0.1098,
+          "span_p": 0.3764,
+          "span_r": 0.0643,
+          "example_auroc": 0.6385,
+          "word_auroc": 0.7154,
+          "n": 180
+        }
+      }
+    },
+    "newmind_ettin_32m": {
+      "model_id": "newmindai/ettin-encoder-32M-TR-HD",
+      "timing": {
+        "n": 2700,
+        "seconds": 80.587814632,
+        "sec_per_example": 0.029847338752592593,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.6158,
+          "example_p": 0.6219,
+          "example_r": 0.6098,
+          "example_macro_f1": 0.6922,
+          "word_f1": 0.3682,
+          "word_macro_f1": 0.6685,
+          "span_f1": 0.3623,
+          "span_p": 0.3379,
+          "span_r": 0.3904,
+          "example_auroc": 0.7546,
+          "word_auroc": 0.8501,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.7524,
+          "example_p": 0.8404,
+          "example_r": 0.681,
+          "example_macro_f1": 0.7029,
+          "word_f1": 0.3274,
+          "word_macro_f1": 0.6504,
+          "span_f1": 0.3285,
+          "span_p": 0.416,
+          "span_r": 0.2713,
+          "example_auroc": 0.7705,
+          "word_auroc": 0.8587,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.5741,
+          "example_p": 0.4627,
+          "example_r": 0.7561,
+          "example_macro_f1": 0.6958,
+          "word_f1": 0.4581,
+          "word_macro_f1": 0.7054,
+          "span_f1": 0.4428,
+          "span_p": 0.3372,
+          "span_r": 0.6447,
+          "example_auroc": 0.8267,
+          "word_auroc": 0.9073,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.3409,
+          "example_p": 0.375,
+          "example_r": 0.3125,
+          "example_macro_f1": 0.5638,
+          "word_f1": 0.1438,
+          "word_macro_f1": 0.5612,
+          "span_f1": 0.1469,
+          "span_p": 0.169,
+          "span_r": 0.1299,
+          "example_auroc": 0.6032,
+          "word_auroc": 0.6843,
+          "n": 180
+        }
+      }
+    },
+    "krlabs_v2_mmbert_zeroshot": {
+      "model_id": "KRLabsOrg/lettucedect-v2-mmbert-base",
+      "timing": {
+        "n": 2700,
+        "seconds": 106.97897622200003,
+        "sec_per_example": 0.03962184304518519,
+        "truncated": 0
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.1901,
+          "example_p": 0.431,
+          "example_r": 0.122,
+          "example_macro_f1": 0.4647,
+          "word_f1": 0.0308,
+          "word_macro_f1": 0.5037,
+          "span_f1": 0.0276,
+          "span_p": 0.3056,
+          "span_r": 0.0145,
+          "example_auroc": 0.6666,
+          "word_auroc": 0.8031,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.2517,
+          "example_p": 0.6667,
+          "example_r": 0.1552,
+          "example_macro_f1": 0.3793,
+          "word_f1": 0.0505,
+          "word_macro_f1": 0.5133,
+          "span_f1": 0.0433,
+          "span_p": 0.4071,
+          "span_r": 0.0229,
+          "example_auroc": 0.5675,
+          "word_auroc": 0.7991,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.1017,
+          "example_p": 0.1667,
+          "example_r": 0.0732,
+          "example_macro_f1": 0.4628,
+          "word_f1": 0.0138,
+          "word_macro_f1": 0.4916,
+          "span_f1": 0.0122,
+          "span_p": 0.1583,
+          "span_r": 0.0064,
+          "example_auroc": 0.6406,
+          "word_auroc": 0.8311,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.1311,
+          "example_p": 0.3077,
+          "example_r": 0.0833,
+          "example_macro_f1": 0.4769,
+          "word_f1": 0.0176,
+          "word_macro_f1": 0.5014,
+          "span_f1": 0.0206,
+          "span_p": 0.2661,
+          "span_r": 0.0107,
+          "example_auroc": 0.6387,
+          "word_auroc": 0.7703,
+          "n": 180
+        }
+      }
+    },
+    "classical_lexical_overlap": {
+      "timing": {
+        "n": 2700,
+        "sec_per_example": 0.007751414467037042
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.5694,
+          "example_p": 0.3996,
+          "example_r": 0.9902,
+          "example_macro_f1": 0.3665,
+          "word_f1": 0.1096,
+          "word_macro_f1": 0.2871,
+          "span_f1": 0.1038,
+          "span_p": 0.055,
+          "span_r": 0.9253,
+          "example_auroc": 0.7514,
+          "word_auroc": 0.6954,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.7838,
+          "example_p": 0.6444,
+          "example_r": 1.0,
+          "example_macro_f1": 0.3919,
+          "word_f1": 0.091,
+          "word_macro_f1": 0.0751,
+          "span_f1": 0.0857,
+          "span_p": 0.0447,
+          "span_r": 0.9981,
+          "example_auroc": 0.5774,
+          "word_auroc": 0.6789,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.4061,
+          "example_p": 0.2564,
+          "example_r": 0.9756,
+          "example_macro_f1": 0.3441,
+          "word_f1": 0.213,
+          "word_macro_f1": 0.4686,
+          "span_f1": 0.2061,
+          "span_p": 0.1152,
+          "span_r": 0.9756,
+          "example_auroc": 0.7428,
+          "word_auroc": 0.8476,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.4273,
+          "example_p": 0.2733,
+          "example_r": 0.9792,
+          "example_macro_f1": 0.2636,
+          "word_f1": 0.06,
+          "word_macro_f1": 0.3342,
+          "span_f1": 0.0557,
+          "span_p": 0.0291,
+          "span_r": 0.6223,
+          "example_auroc": 0.6714,
+          "word_auroc": 0.6415,
+          "n": 180
+        }
+      }
+    },
+    "classical_word_logreg": {
+      "timing": {
+        "n": 2700,
+        "sec_per_example": 0.010219643667777813
+      },
+      "dev_t0.5": {
+        "overall": {
+          "example_f1": 0.603,
+          "example_p": 0.4374,
+          "example_r": 0.9707,
+          "example_macro_f1": 0.4896,
+          "word_f1": 0.1612,
+          "word_macro_f1": 0.4904,
+          "span_f1": 0.1548,
+          "span_p": 0.0884,
+          "span_r": 0.623,
+          "example_auroc": 0.7378,
+          "word_auroc": 0.7338,
+          "n": 540
+        },
+        "Data2txt": {
+          "example_f1": 0.7838,
+          "example_p": 0.6444,
+          "example_r": 1.0,
+          "example_macro_f1": 0.3919,
+          "word_f1": 0.1292,
+          "word_macro_f1": 0.3857,
+          "span_f1": 0.1218,
+          "span_p": 0.066,
+          "span_r": 0.7848,
+          "example_auroc": 0.5115,
+          "word_auroc": 0.706,
+          "n": 180
+        },
+        "QA": {
+          "example_f1": 0.4571,
+          "example_p": 0.2985,
+          "example_r": 0.9756,
+          "example_macro_f1": 0.4718,
+          "word_f1": 0.2897,
+          "word_macro_f1": 0.5966,
+          "span_f1": 0.2897,
+          "span_p": 0.1911,
+          "span_r": 0.5978,
+          "example_auroc": 0.7651,
+          "word_auroc": 0.8179,
+          "n": 180
+        },
+        "Summary": {
+          "example_f1": 0.455,
+          "example_p": 0.305,
+          "example_r": 0.8958,
+          "example_macro_f1": 0.4263,
+          "word_f1": 0.1246,
+          "word_macro_f1": 0.5338,
+          "span_f1": 0.1216,
+          "span_p": 0.0796,
+          "span_r": 0.2569,
+          "example_auroc": 0.6664,
+          "word_auroc": 0.6777,
+          "n": 180
+        }
+      }
+    }
+  },
+  "word_logreg_coefficients": {
+    "in_ctx": -0.291,
+    "stem_in_ctx": -0.043,
+    "is_number": 1.521,
+    "number_in_ctx": -0.792,
+    "capitalized": 0.079,
+    "sentence_initial": -0.31,
+    "length": -0.674,
+    "position": 0.85,
+    "sent_novelty": -0.084,
+    "sent_oov_share": 2.852,
+    "prev_stem_in_ctx": -0.133,
+    "next_stem_in_ctx": -0.154
+  }
+}

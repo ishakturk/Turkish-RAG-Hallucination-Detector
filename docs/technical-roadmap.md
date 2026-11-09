@@ -410,6 +410,28 @@ These are estimates. The pilot replaces them with measured numbers on 13 Nov. Ru
   - Word logistic regression: example F1 0.60, span F1 0.15, example AUROC 0.74, word AUROC 0.73.
   - Strongest features: share of words in the sentence not found in the context, and "is a number". Data2txt example F1 0.78 equals predicting "hallucinated" for everything (64% of Data2txt dev is hallucinated), so example F1 must be read next to AUROC.
 - Notebook `02_baselines` written: all 7 transformer detectors + 2 classical baselines on dev + sealed test, with predictions saved to Drive.
+- **Notebook 02 ran on L4** (`results/02_baselines_dev.json`). All 9 systems worked. Dev, τ = 0.5, n = 540:
+
+  | System | ex-F1 | span-F1 | ex-AUROC | word-AUROC | Summary span-F1 |
+  |---|---|---|---|---|---|
+  | Newmind TurkEmbed4STS-HD | **0.700** | **0.478** | **0.834** | **0.880** | 0.234 |
+  | Newmind bge-m3-HD | 0.681 | 0.440 | 0.828 | 0.881 | 0.126 |
+  | Newmind EuroBERT-tr | 0.668 | 0.420 | 0.820 | 0.859 | 0.113 |
+  | Newmind ModernBERT-tr (paper's best) | 0.668 | 0.467 | 0.801 | 0.872 | 0.176 |
+  | Newmind Ettin-150M-TR | 0.610 | 0.375 | 0.794 | 0.857 | 0.110 |
+  | Newmind Ettin-32M-TR | 0.616 | 0.362 | 0.755 | 0.850 | 0.147 |
+  | KR Labs v2 mmBERT (zero-shot) | 0.190 | 0.028 | 0.667 | 0.803 | 0.021 |
+  | Word logistic regression | 0.603 | 0.155 | 0.738 | 0.734 | 0.122 |
+  | Lexical overlap | 0.569 | 0.104 | 0.751 | 0.695 | 0.056 |
+
+  - **Reproduction check passes.** ModernBERT-tr word-level macro F1 is 0.722 on our dev, against the paper's token-level macro F1 0.7266. Same level of performance, so the go criterion for baselines is met.
+  - **The paper's "best" model is not the best under one protocol.** TurkEmbed4STS-HD leads on every overall metric. Dev has only 540 responses, so confirm on the final test with CIs before claiming it.
+  - **Summary is the weak task for every system** (span F1 0.11–0.23, example AUROC 0.59–0.70). The roadmap's focus on summary-style augmentation is justified.
+  - **KR Labs v2 zero-shot** almost never crosses 0.5 (span F1 0.03), yet word AUROC is 0.80. It ranks Turkish tokens sensibly but is badly calibrated, so it is a promising warm start (R3).
+  - Example F1 at 0.5 hides calibration differences. Thresholds will be tuned per system on dev (notebook 07).
+  - Speed: 0.018–0.047 s/example on L4.
+- **Go/no-go (Phase 1):** baselines ✓, alignment ✓, compute ✓ (training is cheap). Still open: the DeepSeek 30-example quality gate. **Decision: go.**
+- Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 
 ## 9. Immediate next steps (this weekend)
 1. **User:** create the private GitHub repo; add `GH_TOKEN` to Colab Secrets; create `MyDrive/hdtr/`; get the DeepSeek key into Colab Secrets when ready.

@@ -36,16 +36,46 @@ def test_token_probs_to_char_probs_takes_max_and_skips_none():
     np.testing.assert_allclose(probs, [0.2, 0.2, 0.7, 0.7, 0.7, 0.0])
 
 
-def test_encode_example_with_real_tokenizer():
+@pytest.fixture(scope="module")
+def tabibert():
     transformers = pytest.importorskip("transformers")
     try:
-        tok = transformers.AutoTokenizer.from_pretrained("boun-tabilab/TabiBERT")
+        return transformers.AutoTokenizer.from_pretrained("boun-tabilab/TabiBERT")
     except Exception as exc:  # offline or hub unavailable
         pytest.skip(f"tokenizer unavailable: {exc}")
+
+
+PROMPT = "Başvurular 15 Ocak'ta kapanır. Son tarih ne?"
+
+
+@pytest.mark.parametrize("split_words", [False, True])
+def test_encode_example_with_real_tokenizer(tabibert, split_words):
     from hdtr.labels import encode_example
 
-    enc = encode_example(tok, "Başvurular 15 Ocak'ta kapanır. Son tarih ne?", ANSWER, SPAN, max_length=64)
+    enc = encode_example(tabibert, PROMPT, ANSWER, SPAN, max_length=64, split_words=split_words)
     flagged = [o for o, l in zip(enc["answer_offsets"], enc["labels"]) if l == 1]
     covered = "".join(ANSWER[s:e] for s, e in flagged)
     assert "25" in covered and "Ocak" in covered
     assert not enc["truncated"]
+    assert enc["input_ids"][0] == tabibert.cls_token_id
+    assert enc["input_ids"].count(tabibert.sep_token_id) == 2
+
+
+def test_split_words_tokens_never_cross_whitespace(tabibert):
+    from hdtr.labels import encode_example
+
+    enc = encode_example(tabibert, PROMPT, ANSWER, SPAN, split_words=True)
+    pieces = [ANSWER[s:e] for o in enc["answer_offsets"] if o for s, e in [o]]
+    assert all(" " not in p.strip() for p in pieces)
+    # "kadar" must not share a token with the hallucinated "Ocak'a".
+    kadar = ANSWER.index("kadar")
+    labels_on_kadar = [l for o, l in zip(enc["answer_offsets"], enc["labels"]) if o and o[0] >= kadar]
+    assert labels_on_kadar and labels_on_kadar[0] == 0
+
+
+def test_split_words_truncates_prompt_only(tabibert):
+    from hdtr.labels import encode_example
+
+    enc = encode_example(tabibert, PROMPT * 50, ANSWER, SPAN, max_length=40, split_words=True)
+    assert enc["truncated"] and len(enc["input_ids"]) == 40
+    assert sum(o is not None for o in enc["answer_offsets"]) > 5

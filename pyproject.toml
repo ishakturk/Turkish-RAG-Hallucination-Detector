@@ -21,7 +21,8 @@ dependencies = [
 # Exact versions are pinned after the Phase 0 smoke test (see docs/technical-roadmap.md).
 colab = [
   "transformers>=4.48.3,<5",
-  "datasets>=3.0",
+  # datasets 5.x needs huggingface-hub>=1.31, which transformers 4.x rejects; Colab ships 4.8.5.
+  "datasets>=3.0,<5",
   "accelerate>=1.0",
   "matplotlib",
   "seaborn",

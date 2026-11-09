@@ -459,6 +459,12 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - **Gate passed.** User spot check of 5 rows (9 Nov), blind to the reasons for Claude's verdicts:
     - Agreed on 4/5: `mwqa00879` and `mwqa02379` are good, real unsupported claims; `mwqa00669` is wrong (tag on unchanged text); `mwqa02799` is unneeded but not false.
     - Disagreed on `mwqa01400`: as a native speaker, the user finds the inserted clause natural Turkish, not broken. The user's judgment stands, so the final count is **29/30 (97%)**, and the one failure is now rejected automatically.
+- **Augmentation full run** (`results/04_augmentation.json`, prompt v2, 9 Nov, off-peak): 3,830 rows, 4,127 calls, **actual charge $0.80** per the DeepSeek console (our usage-based estimate was $1.26 off-peak; cache hits were 43% of input tokens).
+  - **3,657 rows accepted (95.5%) → 5,484 records:** QA 2,388 faithful + 1,203 with errors; Summary 1,269 + 624. The hallucinated share is 33%, close to RAGTruth-TR train (QA 31%, Summary 31%). Spans per answer with errors: 1.63.
+  - Rejections (counted per attempt): refusals 339 (the generator answered "Verilen pasajlara göre cevap verilemiyor"; most of the 173 rejected rows are refused twice), error count 36, number not in context 35, rewritten 24, **span on unchanged text 15** (the new check), no tags 13, not Turkish 7, copied from context 6.
+  - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
+  - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
+  - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
 - Notebook `04_augmentation` and `hdtr.augment` written (spec in §2.6), with 11 unit tests (49 in total). A local dry run of both modes with a fake DeepSeek client passes: resume, retries, budget accounting, review cards and CSV, parquet output. Title split committed as `data/mwqa_split.json` (augmentation 4,003 rows / 540 articles; native pool 1,003 rows / 133 articles).
 - Notebook `03_pilot` and `hdtr.train` written (HF Trainer, weighted CE / focal loss, word-split encoding option for TabiBERT).
 - **Notebook 03 (pilot) ran on L4** (`results/03_pilot.json`, commit 01a50b5). Each run: 1 epoch on train QA (4,737), scored on validation QA (250 answers, 82 hallucinated), τ = 0.5.
@@ -488,6 +494,6 @@ The table above is the original estimate. Rules: pick the runtime type before st
 
 ## 9. Immediate next steps (from 9 Nov)
 1. ~~User spot check~~ done (see the progress log).
-2. **User:** run `04_augmentation` with `MODE = "full"`, `GATE_PASSED = True`, off-peak (~$1.50; $4 cap), and send `results/04_augmentation.json`.
+2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 4. **Claude:** write `06_train` (config-driven R0–R4, 3 seeds, checkpoints on Drive, resume) and `docs/analysis-plan.md`. Full runs can start early because training is cheap.
 5. Native test set: context selection from the reserved titles, labeling guide, answer generation (`05b`).

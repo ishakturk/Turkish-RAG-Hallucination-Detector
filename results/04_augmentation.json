@@ -1,0 +1,204 @@
+{
+  "notebook": "04_augmentation",
+  "mode": "full",
+  "commit": "35ab25e",
+  "time": "2026-11-09 12:11",
+  "model": "deepseek-flash",
+  "prompt_version": 2,
+  "run": {
+    "planned": 3830,
+    "already_done": 0,
+    "written": 3830,
+    "spent_usd": 2.5172848560000016,
+    "stopped_for_budget": false
+  },
+  "stats": {
+    "rows": 3830,
+    "accepted_rows": 3657,
+    "acceptance_rate": 0.955,
+    "accepted_first_try": 3533,
+    "calls": 4127,
+    "rejection_reasons": {
+      "faithful_refusal": 339,
+      "hallucinated_error_count": 36,
+      "faithful_number_not_in_context": 35,
+      "hallucinated_rewritten": 24,
+      "hallucinated_span_unchanged": 15,
+      "hallucinated_no_tags": 13,
+      "faithful_not_turkish": 7,
+      "hallucinated_span_in_context": 6,
+      "faithful_too_short": 2,
+      "hallucinated_no_change": 2
+    },
+    "records": 5484,
+    "records_by_task_variant": {
+      "QA/faithful": 2388,
+      "QA/hallucinated": 1203,
+      "Summary/faithful": 1269,
+      "Summary/hallucinated": 624
+    },
+    "spans_per_hallucinated": 1.63,
+    "span_final_sentence_share": 0.034,
+    "tokens": {
+      "prompt_cache_hit_tokens": 2817126,
+      "prompt_cache_miss_tokens": 3773595,
+      "completion_tokens": 1140253
+    },
+    "cost_usd_peak": 2.5173,
+    "cost_usd_off_peak": 1.2586,
+    "cost_per_row_peak": 0.000657,
+    "median_sec_per_row": 2.16
+  },
+  "split": {
+    "augment_rows": 4003,
+    "augment_titles": 540,
+    "native_titles": 133
+  },
+  "plans": 3830,
+  "examples": [
+    {
+      "id": "mwqa03881",
+      "task_type": "Summary",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Queensrÿche'ın 21 Ağustos 1990'da yayınlanan dördüncü stüdyo albümü Empire'dır. Grup 27 Nisan 1992'de MTV'de Unplugged konseri vermiş, ancak konser ne MTV'de ne de bootleg CD'de tam olarak yayınlanmıştır; yalnızca beş şarkıya yer verilmiştir. Konserde Anybody Listening? gibi kendi şarkılarının yanı sıra Neil Young'ın Rocking In The Free World parçası da seslendirilmiştir. Grup Empire'dan sonra 1994'teki Promised Land albümüne kadar suskun kalmıştır. 2010'da albümün 20. yılı onuruna iki CD'lik Empire - 20th Anniversary Edition seti çıkarılmıştır."
+        }
+      ]
+    },
+    {
+      "id": "mwqa03254",
+      "task_type": "Summary",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Asbest liflerinin solunması mezotelyoma, asbestozis ve akciğer kanseri gibi tehlikeli akciğer rahatsızlıklarına yol açabildiği için ciddi bir sağlık ve güvenlik tehlikesi olarak bilinir. Isıyı iletmemesi nedeniyle kullanımı çok eski çağlara dayanan asbestin 2500 yıl öncesinden beri kullanıldığı arkeolojik çalışmalarla ortaya konmuştur. On dokuzuncu yüzyılın ikinci yarısından sonra ısıyı ve elektriği yalıtması, sürtünmeye ve asit gibi maddelere dayanıklı olması nedeniyle sihirli mineral olarak tanınmış, ancak yirminci yüzyılın ikinci yarısından sonra kanserojen olduğunun tespit edilmesiyle öldürücü toz olarak tanımlanmıştır. Sağlık sorunlarının geç anlaşılmasının sebebi, hastalığın ortaya çıkması için 40 yılı aşan bir enkübasyon süresine gerek olmasıdır."
+        },
+        {
+          "variant": "hallucinated",
+          "answer_marked": "Asbest liflerinin solunması mezotelyoma, asbestozis ve akciğer kanseri gibi tehlikeli akciğer rahatsızlıklarına yol açabildiği için ciddi bir sağlık ve güvenlik tehlikesi olarak bilinir. Isıyı iletmemesi nedeniyle kullanımı çok eski çağlara dayanan asbestin [[3500]] yıl öncesinden beri kullanıldığı arkeolojik çalışmalarla ortaya konmuştur. On dokuzuncu yüzyılın ikinci yarısından sonra ısıyı ve elektriği yalıtması, sürtünmeye ve asit gibi maddelere dayanıklı olması nedeniyle sihirli mineral olarak tanınmış, ancak yirminci yüzyılın ikinci yarısından sonra kanserojen olduğunun tespit edilmesiyle öldürücü toz olarak tanımlanmıştır. [[Almanya'da 1990'lı yıllarda yasaklanan]] asbestin sağlık sorunlarının geç anlaşılmasının sebebi, hastalığın ortaya çıkması için 40 yılı aşan bir enkübasyon süresine gerek olmasıdır. [[Bu nedenle günümüzde asbest içeren eski binaların yıkımında özel koruyucu ekipman zorunludur.]]"
+        }
+      ]
+    },
+    {
+      "id": "mwqa04752",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Pasaj 3'e göre Swype, 24 Nisan 2013 tarihinde Google Play aracılığıyla indirilebilir duruma gelmiştir. Şirket, bu adımla birlikte uygulamanın beta sürümünden çıktığını duyurmuştur."
+        },
+        {
+          "variant": "hallucinated",
+          "answer_marked": "Pasaj 3'e göre Swype, [[kullanıcıların yoğun talebi üzerine]] 24 Nisan 2013 tarihinde Google Play aracılığıyla indirilebilir duruma gelmiştir. Şirket, bu adımla birlikte uygulamanın beta sürümünden çıktığını [[İstanbul'da düzenlenen bir etkinlikte]] duyurmuştur."
+        }
+      ]
+    },
+    {
+      "id": "mwqa02037",
+      "task_type": "Summary",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Convair X-11, ilk kez 11 Haziran 1957'de uçan Atlas füzesinin ilk tam ölçekli prototipiydi. Sonraki versiyonlardan farklı olarak tek kademeli bir roketti ve yalnızca sabit güçlendiricilerle donatılmıştı, takviye motoru yoktu. İlk olarak Atlas A'da kullanılan tahrik sistemi, tamamen çalışır durumdaki Atlas D'nin 360.000 pound itiş gücüne kıyasla sadece 135.000 pound itiş gücü üreten Rocketdyne MA-1 motorlarının ilk versiyonuydu. İnşa edilen ilk üç Atlas yalnızca statik ateşleme testleri için kullanıldı ve ilk uçuş Missile 4A ile gerçekleştirildi. Program 1945'te başladı, resmi adlandırma 1953'te yapıldı. X-11, dördü başarılı olan sekiz uçuş yaptı."
+        }
+      ]
+    },
+    {
+      "id": "mwqa00168",
+      "task_type": "Summary",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Hira Tekindor, 23 Eylül 1989'da Ankara'da doğmuş Türk tiyatro ve kısa film yönetmeni ve çevirmendir. Ortaöğrenimini İstanbul'daki Lycée Français Pierre Loti'de tamamladı. 2006'da yönettiği Örümcek adlı kısa filmle Uluslararası Şili Kısa Film Festivali'nde En İyi Film ödülü aldı. 2010'da The University of Kent'ten mezun oldu. Oyun Atölyesi'nde Kim Korkar Hain Kurttan, Köprüden Görünüş ve Arzu Tramvayı oyunlarını yönetti. 2014'te Yılın Yönetmeni ödülüne değer görüldü."
+        },
+        {
+          "variant": "hallucinated",
+          "answer_marked": "Hira Tekindor, 23 Eylül 1989'da Ankara'da doğmuş Türk tiyatro ve kısa film yönetmeni ve çevirmendir. Ortaöğrenimini İstanbul'daki Lycée Français Pierre Loti'de tamamladı. 2006'da yönettiği Örümcek adlı kısa filmle Uluslararası Şili Kısa Film Festivali'nde En İyi Film ödülü aldı. [[Ödülün ardından birçok uluslararası festivale davet edildi.]] 2010'da The University of Kent'ten mezun oldu. Oyun Atölyesi'nde Kim Korkar Hain Kurttan, Köprüden Görünüş ve Arzu Tramvayı oyunlarını yönetti. 2014'te Yılın Yönetmeni ödülüne değer görüldü."
+        }
+      ]
+    },
+    {
+      "id": "mwqa00431",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Pasajlara göre NASA astronotları, T-38 tipi uçaklarda veya eğitim uçuşlarında tek tip uçuş kıyafeti giyerler. Şu anki giyilen astronot kıyafeti mavidir ve Nomexten yapılmıştır. NASA ekipleri antrenman sırasında mavi tulumlarını giyerler."
+        }
+      ]
+    },
+    {
+      "id": "mwqa00404",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Reg Gorman'ın Judith Roberts ile evliliğinden üç çocuğu vardı."
+        },
+        {
+          "variant": "hallucinated",
+          "answer_marked": "Reg Gorman'ın Judith Roberts ile evliliğinden [[dört]] çocuğu vardı."
+        }
+      ]
+    },
+    {
+      "id": "mwqa04954",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Tolstoy, zengin bir ailenin çocuğu olarak Rusya'nın Tula şehrindeki Yasnaya Polyana adlı bir konakta doğdu. Kont Nikolai Ilyich Tolstoy ile Prenses Mariya Tolstaya'nın beş çocuğundan dördüncüsüydü."
+        }
+      ]
+    },
+    {
+      "id": "mwqa02920",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Verilen pasajlara göre, Carole Lombard'ın doğumdaki adı Jane Alice Peters'tı. Lombard, Fort Wayne, Indiana'da bu adla doğdu."
+        },
+        {
+          "variant": "hallucinated",
+          "answer_marked": "Verilen pasajlara göre, Carole Lombard'ın doğumdaki adı Jane Alice Peters'tı. Lombard, [[ailesinin ona verdiği bu adı 1921'deki ilk filminden hemen sonra resmi olarak değiştirdi ve]] Fort Wayne, Indiana'da bu adla doğdu."
+        }
+      ]
+    },
+    {
+      "id": "mwqa04217",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Pasajlara göre Touken Ranbu, DMM ile Nitro+ işbirliğiyle geliştirilmiştir; pasaj 3'te oyun \"DMM x Nitro+\" başlığı altında listelenmiştir. Pasajlar bu konuda başka bir geliştirici şirket belirtmemektedir."
+        }
+      ]
+    },
+    {
+      "id": "mwqa01299",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Pierdomenico Baccalario'nun kitapları 18 dile çevrilmiştir. Pasajlarda bu bilgi doğrudan yer almaktadır. Türkiye'de ise yazarın 27 kitabı yayımlanmıştır."
+        },
+        {
+          "variant": "hallucinated",
+          "answer_marked": "Pierdomenico Baccalario'nun kitapları [[30]] dile çevrilmiştir. Pasajlarda bu bilgi doğrudan yer almaktadır. Türkiye'de ise yazarın [[hiçbir kitabı yayımlanmamıştır]]."
+        }
+      ]
+    },
+    {
+      "id": "mwqa03562",
+      "task_type": "QA",
+      "records": [
+        {
+          "variant": "faithful",
+          "answer_marked": "Pasajlara göre Pashanim'in 2020'deki hit şarkıları Hauseingang, Shababs botten ve Airwaves'tir. Bu single'ların her biri Almanya'da altın sertifika almış, Airwaves ise Alman tekli listelerinde iki numaraya ulaşmıştır. Ayrıca 2 Aralık 2020'de üç parçadan oluşan Junge ceos 2 adlı EP'sini yayınlamıştır."
+        }
+      ]
+    }
+  ]
+}

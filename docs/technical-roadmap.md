@@ -465,6 +465,14 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
   - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
   - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
+- **R1 done (10 Nov, L4, `results/06_train.json`).** TabiBERT, 3 seeds, mean ± sd on dev:
+  - **Threshold 0.5:** example F1 0.681 ± 0.018, span F1 0.458 ± 0.017.
+  - **Tuned thresholds** (τ ≈ 0.65–0.7): example F1 0.699 ± 0.019, span F1 0.487 ± 0.003.
+  - **Ranking:** example AUROC 0.831, word AUROC 0.895.
+  - **Summary task:** span F1 0.27 at 0.5.
+  - **Against the best baseline** (TurkEmbed4STS-HD, at 0.5: 0.700 / 0.478 / AUROC 0.834 / 0.880 / Summary 0.234), R1 is **on par overall, not better yet**. It is better on word AUROC (+0.015) and Summary span F1 (+0.035), and slightly behind at τ = 0.5. Baseline thresholds are not tuned yet (notebook 07), so the fair comparison comes there.
+  - **Training:** validation word F1 peaks at 1.5–2 epochs and early stopping ends runs at 2.5–3 epochs. Each run takes ~35 min with 6.2 GB peak GPU memory, so ~2 h for 3 seeds (planned ~3 h).
+  - **Thresholds:** the tuned τ sits above 0.5 because the class weight (4.1) pushes the model towards over-predicting. Tuning fixes that (precision 0.37 → 0.48 at the span threshold).
 - **`06_train` and `docs/analysis-plan.md` written (9 Nov).**
   - Configs `configs/r0.yaml`–`r3.yaml`; R4 copies the chosen base and adds augmentation (≤ a third of the train size, faithful/error pairs kept together, fixed subset).
   - Checkpoint choice is now on **validation word F1**, as planned: `hdtr.train.word_metrics_fn` maps token predictions back to characters and words. The Trainer's evaluation sampler is forced to sequential order, because `group_by_length` also shuffles evaluation in transformers 4.57, which would have mis-aligned predictions and answers.
@@ -502,6 +510,6 @@ The table above is the original estimate. Rules: pick the runtime type before st
 1. ~~User spot check~~ done (see the progress log).
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
-4. **User:** run `06_train` group by group on an L4: `["r1"]` → `["r2"]` → `["r3"]` → `["r0"]` (~1–4 h per group). Send `results/06_train.json` after each group or at the end.
+4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ (done 10 Nov) → `["r2"]` → `["r3"]` → `["r0"]` (~1–4 h per group). Send `results/06_train.json` after each group or at the end.
 5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
 6. After R1–R3: apply the R4 base rule (analysis plan §4.3), then the **user** runs `["r4"]`.

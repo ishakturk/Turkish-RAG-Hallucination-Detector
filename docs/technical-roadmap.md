@@ -465,6 +465,14 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
   - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
   - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
+- **R3 done (10 Nov, `results/06_train.json`).** KR Labs v2 mmBERT (same architecture as R2, hallucination-pretrained), 3 seeds, mean ± sd on dev:
+  - **Threshold 0.5:** example F1 0.719 ± 0.026, span F1 0.497 ± 0.019, example AUROC 0.857, word AUROC 0.904.
+  - **Tuned thresholds:** 0.732 ± 0.032 / 0.514 ± 0.015.
+  - **Span F1 per task (tuned):** QA 0.57, Data2txt 0.51, Summary 0.29.
+  - **Between R1 and R2, and below R2 on every overall metric** (tuned example −0.015, span −0.015), with twice R2's seed spread. Hallucination pretraining gives a faster start (validation word F1 ≈ 0.54 after half an epoch vs ≈ 0.52 for R2) but no better end point. For Q3, no gain from the warm start so far; the final test decides.
+  - **Validation and dev disagree:** R3 has the *highest* best validation word F1 (0.579 vs R2 0.565), yet lower dev scores. Seed 2026 peaked on validation after one epoch (0.593, the best of all runs) and is the weakest R3 seed on dev (0.699 / 0.497). Likely cause: KR Labs v2 saw the English versions of our validation answers (validation is carved from RAGTruth train), so validation flatters it and early stopping trusts it too much. Worth a sentence in the report; dev and test are unaffected.
+  - **Cost:** 32–64 min per seed (2–4 epochs), 6.7 GB peak.
+  - **R4 base by the rule: r2** (selection score 0.638 vs r3 0.623 and r1 0.593; the gap to r3 is above 0.01).
 - **R2 done (10 Nov, `results/06_train.json`).** mmBERT-base, 3 seeds, mean ± sd on dev:
   - **Threshold 0.5:** example F1 **0.740 ± 0.012**, span F1 **0.513 ± 0.016**, example AUROC 0.869, word AUROC 0.906.
   - **Tuned thresholds:** 0.747 / 0.529.
@@ -517,6 +525,6 @@ The table above is the original estimate. Rules: pick the runtime type before st
 1. ~~User spot check~~ done (see the progress log).
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
-4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ (done 10 Nov) → `["r3"]` → `["r0"]` (~1–4 h per group). Send `results/06_train.json` after each group or at the end.
+4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ (done 10 Nov) → `["r4"]` with `R4_BASE = "r2"` (~4 h) → `["r0"]` (~1.5 h). Send `results/06_train.json` after each group.
 5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
-6. After R1–R3: apply the R4 base rule (analysis plan §4.3), then the **user** runs `["r4"]`.
+6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). After R4: apply the final-model rule (R4 if its dev score ≥ R2's).

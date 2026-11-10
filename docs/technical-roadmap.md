@@ -465,6 +465,13 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
   - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
   - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
+- **R2 done (10 Nov, `results/06_train.json`).** mmBERT-base, 3 seeds, mean ± sd on dev:
+  - **Threshold 0.5:** example F1 **0.740 ± 0.012**, span F1 **0.513 ± 0.016**, example AUROC 0.869, word AUROC 0.906.
+  - **Tuned thresholds:** 0.747 / 0.529.
+  - **Span F1 per task (tuned):** QA 0.58, Data2txt 0.54, Summary 0.29.
+  - **R2 beats R1 on every overall metric** (tuned example +0.048, span +0.042, example AUROC +0.038), and every R2 seed beats every R1 seed. It is also **ahead of the best baseline** (TurkEmbed4STS-HD at 0.5: 0.700 / 0.478 / 0.834 / 0.880) on all four, on dev. For Q2, the multilingual base wins over the Turkish-native one, so far on dev only; the final test decides.
+  - **Cost:** ~56 min per seed (3–4 epochs), 6.7 GB peak.
+  - Provisional R4 base by the rule: **r2** (0.638 vs 0.593), pending R3.
 - **R1 done (10 Nov, L4, `results/06_train.json`).** TabiBERT, 3 seeds, mean ± sd on dev:
   - **Threshold 0.5:** example F1 0.681 ± 0.018, span F1 0.458 ± 0.017.
   - **Tuned thresholds** (τ ≈ 0.65–0.7): example F1 0.699 ± 0.019, span F1 0.487 ± 0.003.
@@ -510,6 +517,6 @@ The table above is the original estimate. Rules: pick the runtime type before st
 1. ~~User spot check~~ done (see the progress log).
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
-4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ (done 10 Nov) → `["r2"]` → `["r3"]` → `["r0"]` (~1–4 h per group). Send `results/06_train.json` after each group or at the end.
+4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ (done 10 Nov) → `["r3"]` → `["r0"]` (~1–4 h per group). Send `results/06_train.json` after each group or at the end.
 5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
 6. After R1–R3: apply the R4 base rule (analysis plan §4.3), then the **user** runs `["r4"]`.

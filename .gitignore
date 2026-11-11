@@ -13,3 +13,6 @@ data/raw/
 data/cache/
 *.safetensors
 *.bin
+
+# Claude's independent native-set labels: only their SHA-256 is committed until the user has labeled
+labels_private/

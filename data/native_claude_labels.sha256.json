@@ -1,0 +1,9 @@
+{
+  "note": "Claude labeled the blank native sheet independently, before seeing the user's labels. The labels file stays outside git (labels_private/) until the user has finished; its SHA-256 is committed here so anyone can check later that it was not changed. Columns: no, id, label (1 = hallucinated), unsure, note.",
+  "labeled": "2026-11-11",
+  "rows": 184,
+  "guide": "docs/labeling-guide.md",
+  "blank_sheet_sha256": "5c62acbd44a9446065e819088fed5e6cfbea5cabffcf23210b92429215a652ae",
+  "labels_file": "labels_private/claude_native_labels.csv",
+  "labels_sha256": "107ec4fbd15bf26002ec334e44b42953d0c0e231736ea852e8eb07aca2a77feb"
+}

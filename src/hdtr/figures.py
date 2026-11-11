@@ -51,6 +51,8 @@ TEXT_TR = {
     "Question type": "Soru tipi", "original": "özgün", "partial": "kısmen cevaplanabilir",
     "qwen": "Qwen3-8B", "deepseek": "DeepSeek", "legal": "Hukuk", "wikipedia": "Vikipedi", "Domain": "Alan",
 }
+GROUP_EN = {"qwen": "Qwen3-8B", "deepseek": "DeepSeek", "partial": "partially answerable", "original": "original",
+            "wikipedia": "Wikipedia", "legal": "Legal"}
 _LANG = "en"
 
 
@@ -331,7 +333,7 @@ def native_rates(native: dict):
         for v in values:
             b = native["breakdown"][f"{col}={v}"]
             rates.append(100 * b["hallucinated"] / b["n"])
-            labels.append(f"{t(v)}\n{b['hallucinated']}/{b['n']}")
+            labels.append(f"{t(v) if _LANG == 'tr' else GROUP_EN[v]}\n{b['hallucinated']}/{b['n']}")
         bars = ax.bar(range(len(values)), rates, 0.6, color=SLOTS[0])
         for bar, r in zip(bars, rates):
             ax.text(bar.get_x() + bar.get_width() / 2, r + 1.5, f"{r:.0f}%", ha="center", va="bottom", fontsize=7, color=INK)

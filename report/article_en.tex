@@ -55,7 +55,7 @@ RAGTruth~\cite{niu2024ragtruth} is the standard span-labeled corpus (QA, data-to
 
 \textbf{Augmentation.} From Turkish Wikipedia QA (\texttt{multi-wiki-qa}, \texttt{tr}) DeepSeek wrote a faithful answer or summary per context, and for half of them a version with tagged errors. We found and removed a position shortcut: in the first prompt, a third of the error spans were an appended final sentence; after the fix this fell to 3.4\% (RAGTruth-TR: 11\%). The run produced 5,484 records (33\% hallucinated) for \$0.80. Only R4 uses them.
 
-\textbf{Native test set.} 139 Wikipedia contexts (articles disjoint from the augmentation) and 45 Turkish legal contexts were used. Half of the questions are original; half were rewritten so that the context answers them only in part, and all 203 rewrites were reviewed by hand (30 rejected). Answers come from Qwen3-8B~\cite{yang2025qwen3} and DeepSeek with the RAGTruth-TR prompt template; bare refusals were discarded. The labeling guide was written before any answer existed. Reference labels combine two independent LLM label sets ($\kappa = 0.91$ between them, 6 disagreements adjudicated by the author). The author then labeled a stratified blind sample of 50 rows without AI help:
+\textbf{Native test set.} 139 Wikipedia contexts (articles disjoint from the augmentation) and 45 Turkish legal contexts were used. Half of the questions are original; half were rewritten so that the context answers them only in part, and all 203 rewrites were reviewed by hand (30 rejected). Answers come from Qwen3-8B~\cite{yang2025qwen3} and DeepSeek with the RAGTruth-TR prompt template; bare refusals were discarded. The labeling guide was written before any answer existed. Reference labels combine two independent LLM label sets ($\kappa = 0.91$ between them, 6 disagreements adjudicated by the author). The author then labeled a stratified random sample of 50 rows without AI help and without looking at the LLM labels:
 \begin{itemize}
 \item 85.7\% raw agreement, $\kappa = 0.38$ [$-0.07$, 0.73], PABAK 0.71, with only 6--7 positives in 49 rows;
 \item on review, 6 of the 7 disagreements were resolved in favor of the LLM label (subtle unsupported inferences missed by the human, or omissions the guide does not count).
@@ -124,6 +124,20 @@ Lexical overlap & 0.607 [0.575, 0.637] & 0.141 [0.127, 0.155] & 0.750 \\
 \label{fig:main}
 \end{figure*}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig6_translated_vs_native.pdf}
+\caption{Each system on the translated final test (open) and the native test (filled).}
+\label{fig:native}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig2_q1_q5_forest.pdf}
+\caption{Pre-registered differences (a $-$ b) with 95\% CIs; only Q1 is confirmatory.}
+\label{fig:forest}
+\end{figure*}
+
 \textbf{Per task.} R2 leads on QA (span F1 0.600) and data-to-text (0.574). Summarization is hard for every system (at most 0.309, reached by R4) (Fig.~\ref{fig:tasks}).
 
 \begin{figure}[t]
@@ -141,13 +155,6 @@ Lexical overlap & 0.607 [0.575, 0.637] & 0.141 [0.127, 0.155] & 0.750 \\
 \item Q5: augmentation costs a little example F1 ($-0.018$) on the translated test.
 \end{itemize}
 Threshold tuning matters a lot. The zero-shot KR Labs model scores 0.324 example F1 at $\tau=0.5$ and 0.551 at its tuned $\tau=0.05$.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig2_q1_q5_forest.pdf}
-\caption{Pre-registered differences (a $-$ b) with 95\% CIs; only Q1 is confirmatory.}
-\label{fig:forest}
-\end{figure*}
 
 \textbf{Native Turkish test} (descriptive, scored once with frozen dev thresholds; Table~\ref{tab:native}, Fig.~\ref{fig:native}).
 \begin{itemize}
@@ -180,13 +187,6 @@ TurkEmbed4STS & 0.214 [0.077, 0.358] & 0.67 / 0.13 & 0.589 & 0.079 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig6_translated_vs_native.pdf}
-\caption{Each system on the translated final test (open) and the native test (filled).}
-\label{fig:native}
-\end{figure*}
 
 \section{Discussion and Limitations}
 \textbf{The base model matters most.} TabiBERT tokenizes Turkish more efficiently, but mmBERT wins on this task. Possible reasons:

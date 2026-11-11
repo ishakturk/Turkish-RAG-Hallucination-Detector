@@ -604,9 +604,13 @@ The table above is the original estimate. Rules: pick the runtime type before st
      - **Little signal in some subsets:** DeepSeek has 3 positives and original questions have 9, so per-subset F1 there carries almost no signal.
    - ~~**Claude:** native figures, report, article, slides~~ written (11 Nov).
      - `hdtr.figures` can now label figures in Turkish (`lang="tr"`), and adds fig6 (translated vs native), fig7 (native hallucination rates) and table4 (native).
-     - `report/rapor_tr.tex`: the Turkish IEEE report. `report/article_en.tex`: a shorter English article. Both compile on Overleaf; LaTeX is not installed locally, so they are not yet compiled or page-counted.
+     - `report/rapor_tr.tex`: the Turkish IEEE report. `report/article_en.tex`: a shorter English article.
      - The Turkish slide deck is a 16-slide artifact with speaker notes.
-     - **Still to do:** compile and proofread the report, `main.ipynb`, and the README update.
+   - ~~**Claude:** compile the report~~ done (11 Nov, MiKTeX locally): `rapor_tr.pdf` 10 pages, `article_en.pdf` 5 pages, no errors or overfull boxes.
+     - Added to the report: a training-settings table, a native subgroup table (domain, generator, question type), five native error examples with the error type, and a compute-cost paragraph.
+     - The subgroup table shows the zero-shot KR Labs model has the best example F1 on Qwen answers, partial questions and legal contexts; that comes from its very low threshold (precision 0.05 on DeepSeek answers).
+     - Wide floats were moved earlier in the source so each lands within about a page of its text.
+     - **Still to do:** the user proofreads the Turkish text, `main.ipynb`, and the README update.
    - ~~**User:** run `09`~~ done (`results/09_exploratory.json`, at ea52050). The Q1 reproduction check passed. **Exploratory: R2 beats all 7 existing detectors on both primary metrics** (every 95% CI above 0, no multiple-comparison correction). The closest: ModernBERT-tr, example F1 +0.028 [0.008, 0.049], span F1 +0.068 [0.043, 0.093]; bge-m3 +0.037 [0.018, 0.057] / +0.069 [0.043, 0.096].
    - ~~**Claude:** notebook `09_figures`~~ written (11 Nov, `hdtr.figures`, 2 tests, 74 in total): 5 figures (main results with CIs, Q1–Q5 forest, span F1 per task, dev threshold curves, training curves) and 4 tables (CSV + LaTeX), all rebuilt from the committed result files and checked by eye locally. Plus the **exploratory** paired CIs of R2 vs all 7 existing detectors; the cell checks that its TurkEmbed4STS comparison reproduces 08's Q1 exactly. **User:** run `09` (CPU) and send `09_exploratory.json`.
    - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

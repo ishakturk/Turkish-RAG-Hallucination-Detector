@@ -8,12 +8,15 @@
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
 \usepackage{multirow}
+\usepackage{array}
+\usepackage[normalem]{ulem}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
 \usepackage[hidelinks]{hyperref}
 \usepackage{cite}
 \graphicspath{{figures/tr/}}
+\raggedbottom
 
 \begin{document}
 
@@ -87,7 +90,7 @@ RAGTruth-TR'de özetleme görevi tüm sistemler için zayıf olduğundan, Türk�
 \item \textbf{Cevaplar:} yarısı Colab'de çalıştırılan açık kaynaklı Qwen3-8B~\cite{yang2025qwen3}, yarısı DeepSeek API'si ile, dedektörlerin eğitildiği RAGTruth-TR soru şablonu kullanılarak üretildi. Yalnızca ``cevap verilemiyor'' diyen cevaplar elendi. DeepSeek soruların \%38'inde, Qwen \%9'unda doğrudan cevap vermeyi reddetti. Sonuçta 184 cevaplık bir küme elde edildi.
 \end{itemize}
 
-\textbf{Etiketleme.} Etiketleme kılavuzu (Türkçe ve İngilizce) cevaplar üretilmeden önce yazıldı; temel kural ``yalnızca bağlam geçerlidir'' idi. Kısmi cevaplar ve cevap vermeyi reddetme, söylenen her şey bağlamda olduğu sürece halüsinasyon sayılmadı. Referans etiketler iki bağımsız LLM (Claude) etiket kümesinden oluşturuldu; iki küme 184 satırın 178'inde uyuştu ($\kappa = 0{,}91$), uyuşmayan 6 satırı öğrenci karara bağladı. \textbf{İnsan doğrulaması} için tabakalı rastgele seçilmiş 50 satırı öğrenci, hiçbir yapay zekâ yardımı almadan ve LLM etiketlerini görmeden etiketledi. Etiketlenen 49 satırda uyum \%85{,}7, Cohen $\kappa = 0{,}38$ [$-0{,}07$; 0{,}73] çıktı (hukuk alanında 12/12 uyum). $\kappa$ değerinin düşük görünmesinin önemli bir nedeni, pozitif sınıfın seyrek olmasıdır (49 satırda yalnızca 6--7 halüsinasyon); yaygınlığa göre düzeltilmiş PABAK değeri 0{,}71'dir. Uyuşmayan 7 satır, iki tarafın notları görülerek kılavuza göre yeniden incelendi ve 6'sında LLM etiketi doğru bulundu. Bu satırlardaki farklar ya insan etiketleyicinin kaçırdığı ince desteksiz çıkarımlardı (ör. filmin yapım yılını ödül yılı olarak vermek) ya da kılavuza göre halüsinasyon sayılmayan eksik cevaplardı. Son referans kümede 184 cevabın 47'si (\%26) halüsinasyonludur. Halüsinasyonlu satırlardaki 52 span, desteklenmeyen kelimeleri tam olarak kapsayacak şekilde belirlendi.
+\textbf{Etiketleme.} Etiketleme kılavuzu (Türkçe ve İngilizce) cevaplar üretilmeden önce yazıldı; temel kural ``yalnızca bağlam geçerlidir'' idi. Kısmi cevaplar ve cevap vermeyi reddetme, söylenen her şey bağlamda olduğu sürece halüsinasyon sayılmadı. Referans etiketler iki bağımsız LLM (Claude) etiket kümesinden oluşturuldu; iki küme 184 satırın 178'inde uyuştu ($\kappa = 0{,}91$), uyuşmayan 6 satırı öğrenci karara bağladı. \textbf{İnsan doğrulaması} için tabakalı rastgele seçilmiş 50 satırı öğrenci, hiçbir yapay zekâ yardımı almadan ve etiketleme sırasında LLM etiketlerine bakmadan etiketledi (öğrenci daha önce tüm satırlar üzerindeki bir yapay zekâ geçişini görmüş olduğundan kontrol tam kör değildir; bkz. Sınırlılıklar). Etiketlenen 49 satırda uyum \%85{,}7, Cohen $\kappa = 0{,}38$ [$-0{,}07$; 0{,}73] çıktı (hukuk alanında 12/12 uyum). $\kappa$ değerinin düşük görünmesinin önemli bir nedeni, pozitif sınıfın seyrek olmasıdır (49 satırda yalnızca 6--7 halüsinasyon); yaygınlığa göre düzeltilmiş PABAK değeri 0{,}71'dir. Uyuşmayan 7 satır, iki tarafın notları görülerek kılavuza göre yeniden incelendi ve 6'sında LLM etiketi doğru bulundu. Bu satırlardaki farklar ya insan etiketleyicinin kaçırdığı ince desteksiz çıkarımlardı (ör. filmin yapım yılını ödül yılı olarak vermek) ya da kılavuza göre halüsinasyon sayılmayan eksik cevaplardı. Son referans kümede 184 cevabın 47'si (\%26) halüsinasyonludur. Halüsinasyonlu satırlardaki 52 span, desteklenmeyen kelimeleri tam olarak kapsayacak şekilde belirlendi.
 
 Şekil~\ref{fig:rates}, halüsinasyon oranının üreten modele ve soru tipine çok güçlü biçimde bağlı olduğunu gösterir: Qwen3-8B cevaplarının \%44'ü, DeepSeek cevaplarının yalnızca \%4'ü halüsinasyonludur. Kısmen cevaplanabilir sorular, halüsinasyonun asıl tetikleyicisidir (\%45'e karşı \%9).
 
@@ -144,7 +147,26 @@ R4 & mmBERT-base & R2 + DeepSeek veri artırma (eğitimin \%25'i) \\
 \end{table}
 
 \subsection{Eğitim tarifi}
-AdamW (öğrenme oranı $3\cdot10^{-5}$, \%6 ısınma, doğrusal azalma, ağırlık azaltma 0{,}01), etkin yığın boyutu 16 ve en fazla 4 devir kullandık. Kayıp fonksiyonu sınıf ağırlıklı çapraz entropidir (pozitif sınıf ağırlığı $\sqrt{\text{negatif}/\text{pozitif}}$). Pilot çalışmada odak kaybı (focal loss) daha kötü sonuç verdiği için kullanılmadı. Doğrulama kelime F1'i her yarım devirde ölçüldü; 2 ölçüm boyunca iyileşme olmazsa eğitim durduruldu ve en iyi kontrol noktası seçildi. R1--R4 üç tohumla (42, 1234, 2026) eğitildi. Bir mmBERT-base eğitimi tek bir NVIDIA L4 GPU'da yaklaşık bir saat sürdü.
+AdamW (öğrenme oranı $3\cdot10^{-5}$, \%6 ısınma, doğrusal azalma, ağırlık azaltma 0{,}01), etkin yığın boyutu 16 ve en fazla 4 devir kullandık. Kayıp fonksiyonu sınıf ağırlıklı çapraz entropidir (pozitif sınıf ağırlığı $\sqrt{\text{negatif}/\text{pozitif}}$). Pilot çalışmada odak kaybı (focal loss) daha kötü sonuç verdiği için kullanılmadı. Doğrulama kelime F1'i her yarım devirde ölçüldü; 2 ölçüm boyunca iyileşme olmazsa eğitim durduruldu ve en iyi kontrol noktası seçildi. R1--R4 üç tohumla (42, 1234, 2026) eğitildi. Eğitimde istem ve cevap en fazla 4.096 token'a kadar okunur; sığmayan durumlarda cevap korunur, yalnızca istem kısaltılır (her eğitimde en fazla bir örnek). Çıkarımda sınır 8.192 token'dır; geliştirme ve özgün kümede hiçbir örnek kısaltılmadı. Bir mmBERT-base eğitimi tek bir NVIDIA L4 GPU'da yaklaşık bir saat sürdü. Tüm ayarlar Tablo~\ref{tab:hparams}'te ve depodaki \texttt{configs/} dosyalarındadır.
+
+\begin{table}[t]
+\centering
+\caption{Eğitim ayarları (yığın: etkin yığın boyutu, yani yığın $\times$ gradyan biriktirme)}
+\label{tab:hparams}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Grup & Öğr.\ oranı & Devir & Yığın & Kayıp & Isınma & Erken durdurma \\
+\midrule
+R0 & $1\cdot10^{-5}$ & 6 (sabit) & 4 & sade CE & yok & yok \\
+R1 & $3\cdot10^{-5}$ & $\leq$4 & 16 & ağırlıklı CE & \%6 & 2 ölçüm \\
+R2 & $3\cdot10^{-5}$ & $\leq$4 & 16 & ağırlıklı CE & \%6 & 2 ölçüm \\
+R3 & $3\cdot10^{-5}$ & $\leq$4 & 16 & ağırlıklı CE & \%6 & 2 ölçüm \\
+R4 & \multicolumn{6}{c}{R2 ile aynı; eğitim örneklerinin \%25'ine kadar artırma verisi} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Son işleme ve eşikler}
 Bir kelimenin en yüksek karakter olasılığı eşiği ($\tau$) geçerse kelime işaretlenir; Türkçe ekler kesme işaretiyle birlikte köke bağlı kalır (``Ocak'a''). Aralarında en fazla bir kısa kelime veya noktalama bulunan işaretli kelimeler tek span'de birleştirilir; 2 karakterden kısa span'ler atılır. Her sistem için, referans dedektörler dahil, iki eşik geliştirme kümesinde 0{,}05 adımlarla seçildi: örnek F1'i en yükselten $\tau_{\text{örnek}}$ ve span F1'i en yükselten $\tau_{\text{span}}$. Eşikler, nihai test açılmadan önce bir git commit'iyle donduruldu.
@@ -197,6 +219,15 @@ Sözcük örtüşmesi & klasik & 0,607 & [0,575; 0,637] & 0,141 & [0,127; 0,155]
 \label{fig:main}
 \end{figure*}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig2_q1_q5_forest.pdf}
+\caption{Önceden kaydedilmiş karşılaştırmalarda farklar (a $-$ b) ve \%95 güven aralıkları. Yalnızca Q1 doğrulayıcıdır (mavi).}
+\label{fig:forest}
+\end{figure*}
+
+
+
 \subsection{Mevcut tüm dedektörlerle karşılaştırma (keşifsel)}
 Nihai testte en güçlü mevcut dedektörler ModernBERT-tr ve bge-m3 olmuştur; geliştirme kümesinde seçilen TurkEmbed4STS testte geriler. Bu nedenle R2'yi mevcut yedi dedektörün her biriyle aynı yöntemle karşılaştırdık. Fark, 14 karşılaştırmanın (7 dedektör $\times$ 2 metrik) tamamında pozitif ve güven aralığı sıfırın üstündedir. En yakın rakiplere göre fark ModernBERT-tr için örnek F1'de $+0{,}028$ [0{,}008; 0{,}049] ve span F1'de $+0{,}068$ [0{,}043; 0{,}093], bge-m3 için $+0{,}037$ [0{,}018; 0{,}057] ve $+0{,}069$ [0{,}043; 0{,}096]'dır. Bu karşılaştırmalar önceden planlanmadığı ve çoklu karşılaştırma düzeltmesi içermediği için keşifsel kabul edilmelidir; doğrulayıcı iddia Q1'dir.
 
@@ -231,25 +262,9 @@ TurkEmbed4STS & 0,472 & 0,503 & 0,192 \\
 \label{fig:tasks}
 \end{figure}
 
-\subsection{Kontrollü karşılaştırmalar (Q2--Q5)}
-Şekil~\ref{fig:forest} ikincil soruların etki büyüklüklerini gösterir.
-\begin{itemize}
-\item \textbf{Q2, temel model:} Aynı tarifle çok dilli mmBERT-base (R2), Türkçeye özgü TabiBERT'ten (R1) her iki metrikte de yaklaşık 0{,}05 puan daha iyidir (örnek F1 farkı $-0{,}050$ [$-0{,}067$; $-0{,}035$]). Yalnızca soru-cevap görevinde yapılan pilot çalışmada tersi gözlenmişti; tam veride ve üç görevde sonuç değişti.
-\item \textbf{Q3, halüsinasyon ön eğitimi:} İngilizce ve diğer dillerde halüsinasyon tespiti için önceden eğitilmiş KR Labs modelinden başlamak (R3), sade mmBERT-base'den (R2) daha iyi sonuç vermedi; güven aralıkları sıfırı içerir. R3 eğitime daha hızlı başlar ama daha iyi bir noktada bitmez.
-\item \textbf{Q4, eğitim tarifi:} Bizim tarifimiz (R1) ile Newmind tarzı tarif (R0) karışık sonuç verir: R0 örnek F1'de küçük bir farkla öndedir ($-0{,}022$), span F1'de fark ayırt edilemez. R1 ise kelimeleri daha iyi sıralar (kelime AUROC 0{,}897 ve 0{,}865) ve özetleme span'lerinde açıkça daha iyidir (0{,}286 ve 0{,}215). Sade kayıpla 6 devir eğitilen R0'ın olasılıkları 0 ya da 1'e yığılır; ağırlıklı kayıp ve erken durdurma daha dereceli olasılıklar üretir.
-\item \textbf{Q5, veri artırma:} Çeviri testte veri artırma örnek F1'i biraz düşürür ($-0{,}018$) ve genel span F1'i değiştirmez. Özetleme span F1'i ise tüm sistemler arasında en yüksek değere çıkar. Ancak aşağıda görüleceği gibi, özgün Türkçe testte tablo tamamen değişmektedir.
-\end{itemize}
-Özetle, kazancın büyük kısmı temel modelden ve tüm sistemlere adil eşik verilmesinden gelir; eğitim tarifi tek başına büyük bir kaldıraç değildir.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig2_q1_q5_forest.pdf}
-\caption{Önceden kaydedilmiş karşılaştırmalarda farklar (a $-$ b) ve \%95 güven aralıkları. Yalnızca Q1 doğrulayıcıdır (mavi).}
-\label{fig:forest}
-\end{figure*}
 
-\subsection{Eşikler ve eğitim eğrileri}
-Eşik ayarı, referans dedektörlere bizim modellerimizden daha çok yardımcı olmuştur. Örneğin TurkEmbed4STS'in geliştirme kümesi örnek F1'i 0{,}5 eşiğinde 0{,}700 iken ayarlı eşikte 0{,}728'e çıkar. KR Labs sıfır atış modeli ise 0{,}5 eşiğinde neredeyse hiç işaret koymaz (test örnek F1 0{,}324), en uygun eşiği ise ızgaranın alt ucudur (0{,}05; örnek F1 0{,}551). Bu durum, modelin Türkçede kalibre olmadığını gösterir (Şekil~\ref{fig:thr}). Eğitim eğrileri (Şekil~\ref{fig:train}) doğrulama kelime F1'inin 1{,}5--2 devirde zirveye ulaştığını gösterir; erken durdurma eğitimleri genellikle 2{,}5--3 devirde sonlandırdı.
+
 
 \begin{figure*}[t]
 \centering
@@ -265,16 +280,18 @@ Eşik ayarı, referans dedektörlere bizim modellerimizden daha çok yardımcı 
 \label{fig:train}
 \end{figure*}
 
-\subsection{Özgün Türkçe test kümesi (Q6)}
-Özgün küme, her sistemin dondurulmuş geliştirme eşikleriyle ve yalnızca bir kez puanlandı (Tablo~\ref{tab:native}, Şekil~\ref{fig:native}). Bu analiz önceden betimsel olarak tanımlanmıştır.
+\subsection{Kontrollü karşılaştırmalar (Q2--Q5)}
+Şekil~\ref{fig:forest} ikincil soruların etki büyüklüklerini gösterir.
+\begin{itemize}
+\item \textbf{Q2, temel model:} Aynı tarifle çok dilli mmBERT-base (R2), Türkçeye özgü TabiBERT'ten (R1) her iki metrikte de yaklaşık 0{,}05 puan daha iyidir (örnek F1 farkı $-0{,}050$ [$-0{,}067$; $-0{,}035$]). Yalnızca soru-cevap görevinde yapılan pilot çalışmada tersi gözlenmişti; tam veride ve üç görevde sonuç değişti.
+\item \textbf{Q3, halüsinasyon ön eğitimi:} İngilizce ve diğer dillerde halüsinasyon tespiti için önceden eğitilmiş KR Labs modelinden başlamak (R3), sade mmBERT-base'den (R2) daha iyi sonuç vermedi; güven aralıkları sıfırı içerir. R3 eğitime daha hızlı başlar ama daha iyi bir noktada bitmez.
+\item \textbf{Q4, eğitim tarifi:} Bizim tarifimiz (R1) ile Newmind tarzı tarif (R0) karışık sonuç verir: R0 örnek F1'de küçük bir farkla öndedir ($-0{,}022$), span F1'de fark ayırt edilemez. R1 ise kelimeleri daha iyi sıralar (kelime AUROC 0{,}897 ve 0{,}865) ve özetleme span'lerinde açıkça daha iyidir (0{,}286 ve 0{,}215). Sade kayıpla 6 devir eğitilen R0'ın olasılıkları 0 ya da 1'e yığılır; ağırlıklı kayıp ve erken durdurma daha dereceli olasılıklar üretir.
+\item \textbf{Q5, veri artırma:} Çeviri testte veri artırma örnek F1'i biraz düşürür ($-0{,}018$) ve genel span F1'i değiştirmez. Özetleme span F1'i ise tüm sistemler arasında en yüksek değere çıkar. Ancak aşağıda görüleceği gibi, özgün Türkçe testte tablo tamamen değişmektedir.
+\end{itemize}
+Özetle, kazancın büyük kısmı temel modelden ve tüm sistemlere adil eşik verilmesinden gelir; eğitim tarifi tek başına büyük bir kaldıraç değildir.
 
-\textbf{Tüm denetimli dedektörlerde büyük düşüş.} Nihai modelin örnek F1'i 0{,}766'dan 0{,}458'e, en iyi referansınki 0{,}696'dan 0{,}214'e düşer. Düşüşün ana nedeni geri çağırmadır: R2'nin işaretlediği cevaplar çoğunlukla gerçekten halüsinasyonludur (kesinlik 0{,}80), ancak halüsinasyonların yalnızca üçte birini bulur (geri çağırma 0{,}33). Özgün cevaplardaki halüsinasyonlar kısa ve incedir (yanlış yıl, bağlamdan çıkarılmış ama desteklenmeyen bir neden), çeviri eğitim verisindeki hatalara benzemez. Ayrıca çeviri geliştirme kümesinde seçilen eşikler bu veri için yüksek kalır.
-
-\textbf{En iyi sonuç özgün Türkçe veriyle artırılmış model.} R4, örnek F1 0{,}592 [0{,}469; 0{,}696], AUROC 0{,}776 ve span F1 0{,}361 ile özgün kümede en iyi modeldir; R2'ye göre fark örnek F1'de $+0{,}134$ [0{,}037; 0{,}233]'tür. Çeviri testte etkisiz görünen veri artırma, doğal Türkçe metinde belirgin bir kazanç sağlar. Ancak bu kazancın tamamı Vikipedi alanındadır (0{,}60 ve 0{,}42); hukuk alanında iki model eşittir (0{,}55). Bu nedenle kazancın bir kısmı, artırma verisiyle aynı kaynaktan (Vikipedi) gelmekten kaynaklanıyor olabilir.
-
-\textbf{Sıfır atış modelin sıralama başarısı.} KR Labs v2, çeviri testte en zayıf dedektörken özgün kümede en yüksek AUROC'a sahiptir (0{,}826). Ancak dondurulmuş eşiği (0{,}05) çok düşük olduğundan neredeyse her cevabı işaretler (geri çağırma 0{,}94, kesinlik 0{,}33). Aynı modelin çeviri veriyle ince ayarlanmış hâli (R3) AUROC'ta 0{,}746'ya geriler; bu da çeviri eğitim verisinin çeviriye özgü izler taşıyabileceğine işaret eder.
-
-\textbf{Birincil karşılaştırmanın yönü korunur.} R2 ile TurkEmbed4STS arasındaki fark özgün kümede de pozitiftir (örnek F1 $+0{,}244$ [0{,}122; 0{,}363]). Diğer dedektörlerle farkların çoğunda güven aralıkları sıfırı içerir; 184 cevaplık bir küme dar aralıklar için yeterli değildir. DeepSeek cevaplarında yalnızca 3, orijinal sorularda yalnızca 9 halüsinasyon bulunduğundan bu alt kümelerde dedektörler değerlendirilemez.
+\subsection{Eşikler ve eğitim eğrileri}
+Eşik ayarı, referans dedektörlere bizim modellerimizden daha çok yardımcı olmuştur. Örneğin TurkEmbed4STS'in geliştirme kümesi örnek F1'i 0{,}5 eşiğinde 0{,}700 iken ayarlı eşikte 0{,}728'e çıkar. KR Labs sıfır atış modeli ise 0{,}5 eşiğinde neredeyse hiç işaret koymaz (test örnek F1 0{,}324), en uygun eşiği ise ızgaranın alt ucudur (0{,}05; örnek F1 0{,}551). Bu durum, modelin Türkçede kalibre olmadığını gösterir (Şekil~\ref{fig:thr}). Eğitim eğrileri (Şekil~\ref{fig:train}) doğrulama kelime F1'inin 1{,}5--2 devirde zirveye ulaştığını gösterir; erken durdurma eğitimleri genellikle 2{,}5--3 devirde sonlandırdı.
 
 \begin{table*}[t]
 \centering
@@ -310,6 +327,41 @@ Sözcük örtüşmesi & 0,091 & [0,000; 0,197] & 0,16 & 0,06 & 0,547 & [0,454; 0
 \label{fig:native}
 \end{figure*}
 
+\subsection{Özgün Türkçe test kümesi (Q6)}
+Özgün küme, her sistemin dondurulmuş geliştirme eşikleriyle ve yalnızca bir kez puanlandı (Tablo~\ref{tab:native}, Şekil~\ref{fig:native}). Bu analiz önceden betimsel olarak tanımlanmıştır.
+
+\textbf{Tüm denetimli dedektörlerde büyük düşüş.} Nihai modelin örnek F1'i 0{,}766'dan 0{,}458'e, en iyi referansınki 0{,}696'dan 0{,}214'e düşer. Düşüşün ana nedeni geri çağırmadır: R2'nin işaretlediği cevaplar çoğunlukla gerçekten halüsinasyonludur (kesinlik 0{,}80), ancak halüsinasyonların yalnızca üçte birini bulur (geri çağırma 0{,}33). Özgün cevaplardaki halüsinasyonlar kısa ve incedir (yanlış yıl, bağlamdan çıkarılmış ama desteklenmeyen bir neden), çeviri eğitim verisindeki hatalara benzemez. Ayrıca çeviri geliştirme kümesinde seçilen eşikler bu veri için yüksek kalır.
+
+\textbf{En iyi sonuç özgün Türkçe veriyle artırılmış model.} R4, örnek F1 0{,}592 [0{,}469; 0{,}696], AUROC 0{,}776 ve span F1 0{,}361 ile özgün kümede en iyi modeldir; R2'ye göre fark örnek F1'de $+0{,}134$ [0{,}037; 0{,}233]'tür. Çeviri testte etkisiz görünen veri artırma, doğal Türkçe metinde belirgin bir kazanç sağlar. Ancak Tablo~\ref{tab:subgroups}'te görüldüğü gibi bu kazancın tamamı Vikipedi alanındadır (0{,}605 ve 0{,}422); hukuk alanında iki model örnek F1'de eşittir (0{,}55) ve R4'ün AUROC'u hukukta R2'nin altına düşer (0{,}683 ve 0{,}808). Bu nedenle kazancın bir kısmı, artırma verisiyle aynı kaynaktan (Vikipedi) gelmekten kaynaklanıyor olabilir. R4, seçilen tohumdan da daha az etkilenir: R2'nin tohumlar arası standart sapması özgün kümede 0{,}079 iken R4'te 0{,}018'dir.
+
+\textbf{Alt gruplar.} Tablo~\ref{tab:subgroups}, en önemli dört sistemi alana, üreten modele ve soru tipine göre ayırır. Halüsinasyonların toplandığı Qwen3-8B cevaplarında ve kısmen cevaplanabilir sorularda en yüksek örnek F1'i sıfır atış KR Labs modeli verir (0{,}678 ve 0{,}661); ancak bu, düşük eşiği nedeniyle çok sayıda cevabı işaretlemesinden gelir ve aynı model, neredeyse hiç halüsinasyon içermeyen DeepSeek cevaplarında da çok sayıda yanlış alarm üretir (kesinlik 0{,}05). Bağlamın tamamen cevapladığı orijinal sorularda halüsinasyon nadirdir (100 cevapta 9); burada R4 (0{,}351) R2'den (0{,}144) belirgin biçimde iyidir. DeepSeek cevaplarında yalnızca 3 halüsinasyon olduğundan bu alt kümedeki F1 değerleri anlamlı değildir.
+
+\begin{table}[t]
+\centering
+\caption{Özgün kümede alt gruplara göre örnek F1 / örnek AUROC. $n$: cevap sayısı, $h$: halüsinasyonlu cevap sayısı. R2 ve R4 için 3 tohumun ortalaması. $\dagger$: $h<10$, betimsel bile değil.}
+\label{tab:subgroups}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrcccc@{}}
+\toprule
+Alt grup & $n$ & $h$ & R2 & R4 & KR Labs v2 & ModernBERT-tr \\
+\midrule
+Vikipedi & 139 & 34 & 0,42 / 0,70 & \textbf{0,61} / 0,81 & 0,45 / \textbf{0,83} & 0,24 / 0,69 \\
+Hukuk & 45 & 13 & 0,55 / 0,81 & 0,55 / 0,68 & \textbf{0,62} / \textbf{0,85} & 0,47 / 0,81 \\
+\midrule
+Qwen3-8B & 100 & 44 & 0,49 / 0,74 & 0,63 / 0,76 & \textbf{0,68} / \textbf{0,80} & 0,33 / 0,76 \\
+DeepSeek$^\dagger$ & 84 & 3 & 0,00 / 0,45 & 0,00 / 0,59 & 0,10 / 0,73 & 0,00 / 0,65 \\
+\midrule
+Kısmi soru & 84 & 38 & 0,53 / 0,75 & 0,65 / 0,74 & \textbf{0,66} / \textbf{0,84} & 0,37 / 0,70 \\
+Orijinal soru$^\dagger$ & 100 & 9 & 0,14 / 0,57 & \textbf{0,35} / \textbf{0,71} & 0,23 / 0,69 & 0,00 / 0,56 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Sıfır atış modelin sıralama başarısı.} KR Labs v2, çeviri testte en zayıf dedektörken özgün kümede en yüksek AUROC'a sahiptir (0{,}826). Ancak dondurulmuş eşiği (0{,}05) çok düşük olduğundan neredeyse her cevabı işaretler (geri çağırma 0{,}94, kesinlik 0{,}33). Aynı modelin çeviri veriyle ince ayarlanmış hâli (R3) AUROC'ta 0{,}746'ya geriler; bu da çeviri eğitim verisinin çeviriye özgü izler taşıyabileceğine işaret eder.
+
+\textbf{Birincil karşılaştırmanın yönü korunur.} R2 ile TurkEmbed4STS arasındaki fark özgün kümede de pozitiftir (örnek F1 $+0{,}244$ [0{,}122; 0{,}363]). Diğer dedektörlerle farkların çoğunda güven aralıkları sıfırı içerir; 184 cevaplık bir küme dar aralıklar için yeterli değildir. DeepSeek cevaplarında yalnızca 3, orijinal sorularda yalnızca 9 halüsinasyon bulunduğundan bu alt kümelerde dedektörler değerlendirilemez.
+
 % ------------------------------------------------------------------------------------------------
 \section{Tartışma}
 
@@ -318,6 +370,30 @@ Sözcük örtüşmesi & 0,091 & [0,000; 0,197] & 0,16 & 0,06 & 0,547 & [0,454; 0
 \textbf{Değerlendirme protokolünün önemi.} Aynı modeller için önceki raporlar ile bizim sonuçlarımız arasındaki farkların önemli bir kısmı değerlendirme biçiminden kaynaklanır. Eşik ayarı bazı dedektörlerde örnek F1'i 0{,}2 puandan fazla değiştirir; düzeyler (token, kelime, span, örnek) karıştırıldığında sayılar karşılaştırılamaz. Geliştirme kümesinde ``en iyi'' seçilen referansın testte gerilemesi, tek bir geliştirme puanına dayalı seçimin şans payı taşıdığını gösterir. Bu nedenle tüm kararları önceden kaydetmek ve testi bir kez açmak kritik önemdedir.
 
 \textbf{Çeviri ile gerçek kullanım arasındaki fark.} Bu çalışmanın en önemli uyarısı, çeviri test üzerinde 0{,}7--0{,}77 örnek F1 alan dedektörlerin doğal Türkçe cevaplarda 0{,}2--0{,}6 aralığına düşmesidir. Sıralama başarısı (AUROC) daha az düşer; dolayısıyla sorunun bir kısmı kalibrasyondur ve hedef veriye yakın küçük bir kümeyle eşik ayarı yapmak pratik bir iyileştirme olabilir. Özgün Türkçe veriyle eğitim (R4) bu farkı en çok kapatan yöntemdir.
+
+\textbf{Özgün halüsinasyonlar neye benziyor?} Tablo~\ref{tab:examples}, özgün kümeden beş tipik örnek gösterir. Özgün cevaplardaki hatalar kısadır (52 span'in ortanca uzunluğu 3 kelime, 25 karakter) ve doğal biçimde cümleye yerleşir. Örneklerde dört örüntü görülür: (i) \emph{gerçek ama desteksiz bilgi}: model dünya bilgisinden doğru bir ayrıntı ekler (ISTAT, Oscar töreninin yılı); bağlama göre bu yine de halüsinasyondur ve dedektörün ``doğru mu?'' yerine ``bağlamda var mı?'' sorusunu sorması gerekir; (ii) \emph{yakındaki bir sayıdan çıkarım}: bağlamdaki bir yıl aralığının ucu, sorulan olayın yılı olarak verilir; (iii) \emph{ilişkinin yanlış okunması}: hukuk metnindeki ``yerine'' ifadesi ``veya'' olarak aktarılır ve cezanın anlamı değişir; (iv) \emph{eksik bilgiyi tamamlama}: kısmen cevaplanabilir soruda bağlamda olmayan yıl uydurulur. Özellikle (ii) ve (iii) türlerinde cevaptaki kelimelerin hepsi bağlamda geçer; hata yalnızca kelimeler arasındaki ilişkidedir.
+
+\begin{table*}[t]
+\centering
+\caption{Özgün Türkçe test kümesinden halüsinasyon örnekleri (soru ve cevaplar kısaltılmıştır; altı çizili kısım altın span'dir).}
+\label{tab:examples}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{5.7cm}>{\raggedright\arraybackslash}p{5.0cm}@{}}
+\toprule
+Tür & Soru & Cevap (alıntı) & Bağlam ne diyor? \\
+\midrule
+(i) Gerçek ama desteksiz & Caserta'nın 2010 nüfusu kaçtır ve sayımı hangi kurum yapmıştır? & \ldots nüfusu 78.703'tür ve bu nüfus sayımı \uline{İtalya İstatistik Kurumu (ISTAT) tarafından yapılmıştır}. & Nüfus verilir, sayımı yapan kurum geçmez. \\
+(i) Gerçek ama desteksiz & J.\ K.\ Simmons Oscar'ı hangi filmle ve hangi yıl kazandı? & \ldots 2014 yapımı \emph{Whiplash} filmindeki rolüyle \ldots\ bu ödülü \uline{2015 yılında} aldı. & Film ve yapım yılı geçer, tören yılı geçmez. \\
+(ii) Yakın sayıdan çıkarım & Ankyralı Marcellus hangi yıl Roma'ya gitti? & Ankyralı Marcellus, \uline{336 yılında} Roma'ya giderek \ldots & ``314--336 yılları arasında'' episkopos olduğu söylenir; Roma yolculuğunun yılı verilmez. \\
+(iii) İlişkinin yanlış okunması & Yükümlülük ihmaliyle ölüme neden olan kişiye hangi ceza verilir? & \ldots kişiye \uline{müebbet hapis cezası veya} yirmi yıldan yirmibeş yıla kadar hapis cezası verilebilir. & ``ağırlaştırılmış müebbet hapis cezası \emph{yerine} yirmi yıldan yirmibeş yıla kadar'' der. \\
+(iv) Eksik bilgiyi tamamlama & Yüzde usulündeki dağıtım oranları hangi yıl yürürlüğe girmiştir? & \ldots Bakanlığınca hazırlanacak bir yönetmelikle gösterilir. Bu yönetmelik, \uline{2008 yılında yürürlüğe girmiştir}. & Oranların bir yönetmelikle gösterileceği söylenir; yıl geçmez. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\textbf{Hesaplama maliyeti.} Kodlayıcı dedektörlerin pratik avantajı hızdır: mmBERT-base tabanlı bir model, Colab GPU'sunda özgün kümenin 184 cevabını yaklaşık 6{,}6 saniyede (cevap başına $\sim$36 ms) puanlar; en küçük referans modeller cevap başına 15--20 ms'dir. Bir eğitim tek GPU'da yaklaşık bir saat sürer, veri artırmanın toplam API maliyeti 0{,}80 dolardır. Aynı işi bir BDM'ye yaptırmak her cevap için ayrı bir üretim çağrısı gerektirir.
 
 \textbf{Sınırlılıklar.}
 \begin{itemize}

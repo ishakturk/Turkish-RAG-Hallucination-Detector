@@ -206,10 +206,11 @@ The generation spec below applies to whichever generator is used.
   - 50% use the dataset's question.
   - 50% are rewritten to ask for details the context only partly covers. This induces hallucination without making the question unanswerable.
 - **Answers:** 2 generators, half each:
-  - an open model on Colab via vLLM (Qwen2.5-7B-Instruct or Qwen3-8B, Apache-2.0);
+  - an open model on Colab: Qwen3-8B (Apache-2.0), thinking off, via plain `transformers` (vLLM is not needed for ~150 short answers);
   - DeepSeek through the API.
-  - Generic RAG prompt. Answers are checked for completeness (length and final punctuation).
+  - Prompt: the RAGTruth-TR QA template the detectors were trained on (changed 11 Nov from "generic RAG prompt", so the native set differs from the translated test in language origin, not in input format). Answers are checked for completeness (length and final punctuation).
   - Target: ~40–50% hallucinated (measured after labeling; top up if far off).
+- **As built (11 Nov, `hdtr.native`, notebooks 05a/05b):** 152 Wikipedia + 48 legal = 200 examples, contexts ≤ 1,500 characters, each domain balanced over question type × generator (38 or 12 per cell). Candidates are drawn 1.5× oversized in a seeded order; per cell the first ones whose question and answer pass objective checks are kept. The labeling sheet hides the generator and the question type.
 - **Labeling:**
   1. Write `docs/labeling-guide.md` first (Turkish and English, with examples). Key rule: a claim that is true in the world but absent from the context counts as hallucinated.
   2. The user labels example-level yes/no in a CSV or Google Sheet, without seeing any model output. About 1 minute per example.
@@ -217,7 +218,7 @@ The generation spec below applies to whichever generator is used.
   4. Compute Cohen's κ (human vs LLM), and κ per domain.
   5. The user adjudicates every disagreement, and the user's label is final.
   6. For hallucinated answers, Claude proposes character spans; the user accepts or edits them.
-- **Time for the user:** about 3.5 h (labeling) + ~1 h (adjudication) + ~1.5 h (span edits), spread over weeks 2–3.
+- **Time for the user:** about 4–5 h (labeling, ~1–1.5 min per example) + ~1 h (adjudication) + ~1.5 h (span edits).
 - **Release:** this set inherits NC-SA from Wikipedia and multi-wiki-qa; the legal part is CC BY. This is documented in the dataset card.
 
 ### 2.8 Classical baselines (rubric: "2 classical ML")
@@ -472,6 +473,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - **R0 is overconfident:** training loss reaches ~0.02 by epoch 6 and its threshold curve is almost flat (span F1 0.43–0.47 for every τ from 0.05 to 0.85), so its probabilities sit near 0 or 1. Weighted CE plus early stopping (R1) keeps probabilities graded, which is what word AUROC measures.
   - **Selection score 0.602 vs R1 0.593:** a tie under our 0.01 margin. For Q4 the recipe changes *what* the model is good at more than *how good* it is; the final test decides, with R0's single seed as a stated limitation.
   - Ran on an A100 (47.5 min, 4.1 GB), not the L4 used for R1–R4. Results should be comparable; the hardware difference is noted in the report.
+- **Native test set tooling (11 Nov).** Labeling guide written before any answer exists (its commit is the timestamp). The legal source is the `qa_benchmark` config of `mtntasci/turkish-legal-rag` (290 questions over 25 laws; only active, valid rows; one article per context, round-robin over laws). The Wikipedia candidates cover 131 of the 133 reserved articles. Rewritten questions are reviewed by Claude from `05a_native_questions.json`; the user does not read them, so labeling stays blind to the design.
 - **Final test scored once (11 Nov, `results/08_final_test.json`, notebook 08 at febcfbb, `rerun_reason` none).** 2,160 responses / 360 sources (clean: 2,146), frozen dev thresholds, fingerprints verified. All conclusions are the same on the clean test.
   - **Q1 (primary): R2 is better than the best baseline on both primary metrics.** Example F1 0.766 [0.738, 0.792] vs TurkEmbed4STS-HD 0.696: **+0.070, CI [0.049, 0.093]**. Span F1 0.538 [0.493, 0.578] vs 0.438: **+0.100, CI [0.075, 0.125]**. Permutation test p < 0.001 for every seed on both metrics, so the claim is robust. Example AUROC 0.897 vs 0.851.
   - **The test gap is larger than the dev gap** (+0.019 / +0.051) mostly because TurkEmbed4STS drops on test (example F1 0.728 → 0.696) while R2 rises (0.747 → 0.766). The best baseline was picked as the maximum of 7 dev scores, so its dev score was partly luck. **On test, ModernBERT-tr (0.738 / 0.470) and bge-m3 (0.729 / 0.469) are the strongest existing detectors.** R2 still leads them (+0.028 example F1, +0.068 span F1), but only the TurkEmbed4STS comparison is confirmatory; a paired CI against the others is an exploratory addition for 09.
@@ -559,4 +561,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
    - ~~**User:** run `07_thresholds`~~ done; committed 11 Nov. **Claude** commits it: that commit freezes the thresholds and the best-baseline choice before the test is opened.
    - ~~**User:** run `08_final_test` once~~ done 11 Nov: Q1 confirmed on both primary metrics (see the progress log).
 6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). ~~After R4: apply the final-model rule~~ → **final model = R2** (0.638 vs R4 0.634, 11 Nov).
-7. **Claude:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`); then 09 figures, `main.ipynb`, report.
+7. ~~**Claude:** native test set notebooks and labeling guide~~ written (11 Nov): `docs/labeling-guide.md` (English + Turkish), `hdtr.native` (9 tests, 70 in total), `05a_native_questions` (CPU), `05b_native_answers` (L4). Dry run of both with a fake DeepSeek and a fake Qwen on the real contexts passes: 200 examples, balanced cells, resume without new calls.
+   - **User:** run `05a` (CPU, ~5 min) and send `05a_native_questions.json` **without opening it**. Claude checks the rewritten questions.
+   - **User:** then run `05b` (L4, ~20–30 min), send `05b_native_answers.json`, and label `native_labeling.csv` blind following the guide.
+   - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

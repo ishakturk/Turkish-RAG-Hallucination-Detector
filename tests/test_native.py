@@ -157,6 +157,15 @@ def test_run_local_and_select_final(tmp_path):
     assert all(v == 1 for k, v in counts.items() if k[0] == "legal")
 
 
+def test_stratified_sample_is_proportional_and_deterministic():
+    ids = [f"r{i}" for i in range(184)]
+    strata = ["wq"] * 76 + ["wd"] * 63 + ["lq"] * 24 + ["ld"] * 21
+    a = N.stratified_sample(ids, strata, 50, seed=1)
+    assert a == N.stratified_sample(ids, strata, 50, seed=1) and len(set(a)) == 50
+    got = Counter(strata[ids.index(i)] for i in a)
+    assert got == {"wq": 21, "wd": 17, "lq": 6, "ld": 6}
+
+
 def test_labeling_sheet_hides_design_and_read_label_sheet_reports_problems():
     final = [{**_cand(i, gen="deepseek"), "question": "Soru?", "answer": "Cevap."} for i in range(4)]
     sheet = N.labeling_sheet(final)

@@ -13,7 +13,7 @@
 
 **Contributions (in report order):**
 1. A public, reproducible evaluation of all Turkish detectors at example, word and span level, documenting the reporting inconsistencies in prior work.
-2. A native Turkish test set (~200 examples), hand-labeled, with human–LLM agreement reported.
+2. A native Turkish test set (184 examples), LLM-labeled and validated by a human on a blind 50-row sample (analysis plan, amendment 1).
 3. Our detector (TabiBERT-based), plus controlled answers to two questions: Turkish-native vs multilingual base, and whether multilingual hallucination training transfers to Turkish.
 
 **Decision log:**
@@ -26,7 +26,7 @@
 | D4 | Runs: R0 TabiBERT with old-style recipe; R1 TabiBERT with our recipe; R2 mmBERT-base with our recipe; R3 KR Labs v2 mmBERT with our recipe; R4 = best of R1–R3 plus augmentation. |
 | D5 | Data audit uses alignment to the original English RAGTruth. The same audit runs on test, and we report both full test and clean test. |
 | D6 | Augmentation: ~4,000 native Turkish examples generated in one batch with **DeepSeek `deepseek-flash`** (thinking off) from `alexandrainst/multi-wiki-qa` (`tr`). Estimated cost $2.50–5 (see §2.6). Groq / Qwen3.8-27B is the fallback. |
-| D7 | Native test set: ~200 examples. The user labels at example level, blind. Claude labels independently; we compute κ, the user adjudicates, and spans are LLM-proposed and user-edited. Never used for training. |
+| D7 | Native test set: 184 examples. ~~The user labels at example level, blind.~~ **Amended 11 Nov (analysis plan §10):** reference labels come from two Claude label sets (the user adjudicates their 6 disagreements); the user labels a blind 50-row random sample alone, and κ on that sample is the human validation. Spans are LLM-proposed. Never used for training. |
 | D8 | Workflow: private GitHub repo, made public at submission. Notebooks are run manually in Colab, and each one ends with a `results/*.json`. |
 | D9 | Hugging Face release after the project. For submission, the trained model is downloadable without login (decided in Phase 4). |
 
@@ -572,6 +572,8 @@ The table above is the original estimate. Rules: pick the runtime type before st
    - ~~**User:** run `05a`~~ done; reviewed (11 rejected, legal source narrowed). Second and third runs reviewed; all 203 rewrites reviewed, 30 rejected.
    - ~~**User:** run `05b`~~ done; rerun with checks v2 gives **184 examples** (`results/05b_native_answers.json`, at a7ecc75, identical to Claude's dry run on the same logs). The native set is now fixed.
    - **User:** send the *blank* `native_labeling.csv` once, then label it blind following the guide (~3–4.5 h, blocks of 25).
-   - ~~**Claude:** label the blank sheet independently~~ done 11 Nov, before any user label: `data/native_claude_labels.sha256.json` (labels in the git-ignored `labels_private/`). Next: κ, adjudication list, span proposals once the user's sheet arrives.
+   - ~~**Claude:** label the blank sheet independently~~ done 11 Nov, before any user label: `data/native_claude_labels.sha256.json` (labels in the git-ignored `labels_private/`). The user's full sheet came back the same day, labeled with the Claude extension in Google Sheets (the user said so when asked): κ 0.91 with Claude's labels, 6 disagreements, 23% hallucinated (Qwen 42%, DeepSeek 1%; rewritten questions 43%, original 7%). It counts as a second LLM label set → **amendment 1**.
+   - **User:** label `data/native_human_sample_blank.csv` (50 rows) **alone, with the AI extension off** (~50 min), and send it. Only then: the 6-row adjudication (it may include sample rows, so it waits), κ on the sample, spans.
+   - ~~**User:** run `09`~~ done (`results/09_exploratory.json`, at ea52050). The Q1 reproduction check passed. **Exploratory: R2 beats all 7 existing detectors on both primary metrics** (every 95% CI above 0, no multiple-comparison correction). The closest: ModernBERT-tr, example F1 +0.028 [0.008, 0.049], span F1 +0.068 [0.043, 0.093]; bge-m3 +0.037 [0.018, 0.057] / +0.069 [0.043, 0.096].
    - ~~**Claude:** notebook `09_figures`~~ written (11 Nov, `hdtr.figures`, 2 tests, 74 in total): 5 figures (main results with CIs, Q1–Q5 forest, span F1 per task, dev threshold curves, training curves) and 4 tables (CSV + LaTeX), all rebuilt from the committed result files and checked by eye locally. Plus the **exploratory** paired CIs of R2 vs all 7 existing detectors; the cell checks that its TurkEmbed4STS comparison reproduces 08's Q1 exactly. **User:** run `09` (CPU) and send `09_exploratory.json`.
    - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

@@ -111,4 +111,12 @@ If a bug is found after step 4, the fix and the rerun are documented in §10, wi
 
 ## 10. Amendments
 
-*(none yet)*
+### Amendment 1 (2026-11-11): native test set labels (§6)
+
+- **What happened:** the full 184-row sheet was labeled with an AI assistant (the Claude extension in Google Sheets), not by the user alone. Its notes closely match Claude's independent labels made earlier in this project (κ = 0.91), as two runs of the same model family are expected to. These are therefore two LLM label sets, and κ between them is not human–LLM agreement.
+- **New labeling procedure:**
+  1. **Reference labels = LLM labels:** the two Claude label sets. Where they agree, that label is used; the 6 rows where they disagree are decided by the user.
+  2. **Human validation:** the user labels a blind sample of **50 rows** alone, without AI help (`data/native_human_sample.json`: random within domain × generator strata, seed 482, drawn before any human label of these rows). Reported: Cohen's κ between the user and the reference labels on these 50 rows, overall and per domain, with a bootstrap CI. The user had seen the AI pass over all rows, so the check is not fully blind; this is stated as a limitation.
+  3. **Spans:** proposed by Claude for every row with reference label 1; not edited row by row. Native span F1 stays secondary (§6 already allows LLM-proposed spans).
+- **Unchanged:** the native set is scored once, with dev thresholds, never used for training or tuning, and Q6 stays descriptive.
+- **Reporting:** the report describes the set as "LLM-labeled, validated by a human on a 50-row random sample", not as hand-labeled.

@@ -470,6 +470,24 @@ def labeling_sheet(final: list[dict], seed: int = SEED) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=list(LABEL_COLUMNS))
 
 
+def stratified_sample(ids: list[str], strata: list[str], n: int, seed: int = SEED) -> list[str]:
+    """``n`` ids drawn at random within strata, allocated in proportion to stratum size (largest
+    remainders), for the blind human check of the LLM labels. Chosen without looking at any label."""
+    groups = {}
+    for i, s in zip(ids, strata):
+        groups.setdefault(s, []).append(i)
+    total = len(ids)
+    quota = {s: n * len(g) / total for s, g in groups.items()}
+    alloc = {s: int(q) for s, q in quota.items()}
+    for s in sorted(quota, key=lambda s: (-(quota[s] - alloc[s]), s))[: n - sum(alloc.values())]:
+        alloc[s] += 1
+    rng = random.Random(seed)
+    picked = []
+    for s in sorted(groups):
+        picked += rng.sample(sorted(groups[s]), alloc[s])
+    return picked
+
+
 def read_label_sheet(sheet: pd.DataFrame, ids: list[str]) -> tuple[dict[str, int], list[str]]:
     """Labels from a filled-in sheet (1 = hallucinated, 0 = faithful) and a list of problems."""
     problems, labels = [], {}

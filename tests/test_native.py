@@ -76,12 +76,13 @@ def test_check_rewrite():
 
 def test_check_answer():
     assert N.check_answer("Lig 1927 yılında kuruldu.") == []
+    assert N.check_answer("Gävle") == [] and N.check_answer("Spike Jonze - 4 Aralık 2013") == []  # phrase answers
     assert N.check_answer("Verilen pasajlara göre cevap verilemiyor.") == ["refusal"]
-    long_refusal = ("Lig 1927 yılında kuruldu ve Skonto FC 14 kez şampiyon oldu. Ancak ilk şampiyonun "
-                    "kim olduğu belirtilmediği için bu kısma cevap verilemiyor.")
-    assert N.check_answer(long_refusal) == []                           # partial answer is kept
-    assert "unfinished" in N.check_answer("Lig 1927 yılında kuruldu ve")
-    assert "max_tokens" in N.check_answer("Lig kuruldu.", "length")
+    partial = ("Kaikyō Hattı, Naka-Oguni - Kikonai güzergahında çalışıyor ve açılış tarihi pasajlarda yok. "
+               "Dolayısıyla, verilen pasajlara göre cevap verilemiyor.")
+    assert N.check_answer(partial) == []                                # answers, then refuses the rest
+    assert N.check_answer("  ") == ["empty"]
+    assert "max_tokens" in N.check_answer("Lig kuruldu ve", "length")
     assert "thinking_text" in N.check_answer("<think>hmm</think> Lig kuruldu.")
     assert "not_turkish" in N.check_answer("The league was founded in 1927 and it is the top level of the sport.")
     assert "markdown_heading" in N.check_answer("# Cevap\nLig 1927 yılında kuruldu.")
@@ -124,6 +125,16 @@ def test_run_api_retries_failures_and_resumes(tmp_path):
     assert s["calls_this_run"] == 0 and comp.calls == 4
     last = N.latest(N.A.read_jsonl(out))
     assert last["j0"]["attempt"] == 2 and last["j0"]["result"] == "Lig 1927 yılında kuruldu."
+
+
+def test_first_passing_rechecks_log_text_and_keeps_the_first_good_attempt():
+    lines = [{"id": "a", "attempt": 1, "ok": False, "text": "Gävle", "finish": "stop", "reasons": ["too_short"]},
+             {"id": "a", "attempt": 2, "ok": True, "text": "Şehir Gävle'dir.", "finish": "stop", "reasons": []},
+             {"id": "b", "attempt": 2, "ok": False, "text": "Verilen pasajlara göre cevap verilemiyor.", "finish": "stop"},
+             {"id": "b", "attempt": 1, "ok": False, "text": "Verilen pasajlara göre cevap verilemiyor.", "finish": "stop"}]
+    out = N.first_passing(lines, N.answer_check)
+    assert out["a"]["ok"] and out["a"]["attempt"] == 1 and out["a"]["result"] == "Gävle"
+    assert not out["b"]["ok"] and out["b"]["attempt"] == 2 and out["b"]["reasons"] == ["refusal"]
 
 
 def test_run_local_and_select_final(tmp_path):

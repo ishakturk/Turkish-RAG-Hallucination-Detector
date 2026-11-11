@@ -8,13 +8,17 @@
 # 1. **Answers:** every candidate from 05a gets one answer from its assigned generator,
 #    **Qwen3-8B** (on this GPU, thinking off) or **DeepSeek** (API). Both receive the RAGTruth-TR QA
 #    prompt the detectors were trained on, as the only user message, the way RAGTruth was built.
-# 2. **Checks (objective only):** complete, Turkish, not a bare refusal, no thinking text, not too long.
-#    A failed answer is regenerated once.
+# 2. **Checks (objective only, v2):** not cut off at the token limit, not empty, Turkish, not *only* a
+#    refusal ("Verilen pasajlara göre cevap verilemiyor."), no thinking text, not too long. A failed answer
+#    is regenerated once. Short phrase answers ("9 Eylül 1901") are valid; v1 wrongly rejected them, so
+#    answers are re-checked from the logs and each question keeps its first passing attempt.
 # 3. **Final set:** per domain and cell, the first candidates (in the fixed 05a order) with an accepted
-#    answer: 152 Wikipedia + 48 legal = 200. Nothing here looks at whether an answer is faithful.
+#    answer, up to 152 Wikipedia + 48 legal = 200. Cells may fall short where a generator refuses too often.
+#    Nothing here looks at whether an answer is faithful.
 # 4. **Labeling sheet:** `native_labeling.csv`, shuffled, without the generator or the question type.
 #
-# **Runtime:** L4 GPU (~20–30 min including the 16 GB Qwen download, about $0.10 of DeepSeek).
+# **Runtime:** L4 GPU on the first run (~20–30 min including the 16 GB Qwen download, about $0.10 of
+# DeepSeek). A rerun with every answer already on Drive needs no GPU and finishes in a minute.
 # **Secrets:** `GH_TOKEN`, `DEEPSEEK_API_KEY`.
 # **Output:** `MyDrive/hdtr/native/native_labeling.csv` (you label this, following `docs/labeling-guide.md`),
 # `MyDrive/hdtr/native/native_test.parquet`, and `MyDrive/hdtr/results/05b_native_answers.json` (send this one back).
@@ -74,7 +78,6 @@ from hdtr import augment as A
 from hdtr import native as N
 from hdtr.text import words
 
-assert torch.cuda.is_available(), "No GPU: Runtime → Change runtime type → L4."
 major, minor = (int(x) for x in transformers.__version__.split(".")[:2])
 assert (major, minor) >= (4, 51), f"Qwen3 needs transformers ≥ 4.51, found {transformers.__version__}"
 
@@ -113,17 +116,25 @@ print(ds_run, f"| {time.time() - t0:.0f} s")
 qw_jobs = [{"id": c["id"], "messages": N.answer_messages(c["prompt"])} for c in cands if c["generator"] == "qwen"]
 t0 = time.time()
 qw_log = f"{NATIVE}/answers_qwen.jsonl"
-# Load the model (16 GB) only if some Qwen answer is still missing.
-generate = N.qwen_generator() if N.pending(qw_jobs, A.read_jsonl(qw_log), max_attempts=2) else None
+# Load the model (16 GB) only if some Qwen answer is still missing; otherwise no GPU is needed.
+if N.pending(qw_jobs, A.read_jsonl(qw_log), max_attempts=2):
+    assert torch.cuda.is_available(), "Qwen answers are missing and there is no GPU: Runtime → Change runtime type → L4."
+    generate = N.qwen_generator()
+else:
+    generate = None
 qw_run = N.run_local(generate, qw_jobs, qw_log, N.answer_check, batch_size=8)
-print(qw_run, f"| {time.time() - t0:.0f} s | peak GPU {torch.cuda.max_memory_allocated() / 2**30:.1f} GB")
+peak = f" | peak GPU {torch.cuda.max_memory_allocated() / 2**30:.1f} GB" if torch.cuda.is_available() else ""
+print(qw_run, f"| {time.time() - t0:.0f} s{peak}")
 
 # %% [markdown]
 # ## Final set and labeling sheet
 
 # %%
 logs = {"deepseek": A.read_jsonl(f"{NATIVE}/answers_deepseek.jsonl"), "qwen": A.read_jsonl(f"{NATIVE}/answers_qwen.jsonl")}
-answers = {**N.latest(logs["deepseek"]), **N.latest(logs["qwen"])}
+# Answers are re-checked from the logged text with the current checks (v2), taking each question's
+# first attempt that passes. No new calls are needed when the checks change.
+checked = {g: N.first_passing(lines, N.answer_check) for g, lines in logs.items()}
+answers = {**checked["deepseek"], **checked["qwen"]}
 final, shortfall = N.select_final(cands, answers)
 if shortfall:
     print("WARNING, cells short of their target (send the results file to Claude):", shortfall)
@@ -154,9 +165,15 @@ results = {"notebook": "05b_native_answers", "commit": commit, "time": time.strf
            "models": {"qwen": N.QWEN_MODEL, "qwen_sampling": N.QWEN_SAMPLING, "deepseek": A.MODEL,
                       "deepseek_temperature": N.DEEPSEEK_TEMPERATURE},
            "transformers": transformers.__version__, "runs": {"deepseek": ds_run, "qwen": qw_run},
-           "rejection_reasons": {g: dict(Counter(r for l in lines for r in l["reasons"])) for g, lines in logs.items()},
-           "accepted_first_try": {g: sum(1 for l in N.latest(lines).values() if l["ok"] and l["attempt"] == 1)
-                                  for g, lines in logs.items()},
+           "answer_check_version": N.ANSWER_CHECK_VERSION,
+           # Per question, under the current checks: accepted, or why its last attempt failed.
+           "questions": {g: {"total": len(c), "accepted": sum(l["ok"] for l in c.values()),
+                             "accepted_first_try": sum(l["ok"] and l["attempt"] == 1 for l in c.values()),
+                             "failed_by_reason": dict(Counter(r for l in c.values() if not l["ok"] for r in l["reasons"])),
+                             "accepted_short_answers_le_3_words": sum(l["ok"] and len(words(l["result"])) <= 3
+                                                                     for l in c.values())}
+                         for g, c in checked.items()},
+           "rejection_reasons_v1_log": {g: dict(Counter(r for l in lines for r in l["reasons"])) for g, lines in logs.items()},
            "final": len(final), "shortfall": shortfall,
            "cells": {"/".join(k): v for k, v in Counter((c["domain"], c["question_type"], c["generator"])
                                                          for c in final).items()},

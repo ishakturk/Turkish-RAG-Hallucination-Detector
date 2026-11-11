@@ -30,7 +30,7 @@ import pandas as pd
 
 from . import augment as A
 from .data import _english_share
-from .text import ends_like_sentence, words
+from .text import words
 
 SEED = 482
 # Bump when REWRITE_SYSTEM changes: log files are named by it, so old rewrites are never reused.
@@ -231,22 +231,34 @@ def apply_review(cands: list[dict], review: dict) -> tuple[list[dict], list[str]
 # Answer checks (objective only: nothing about whether the answer is faithful)
 # --------------------------------------------------------------------------------------------
 
+# v2 (11 Nov, after the first 05b run, before any labeling): v1 also rejected answers under 3 words
+# or without final punctuation. The logs showed those were complete phrase answers ("Gävle",
+# "9 Eylül 1901", "Spike Jonze - 4 Aralık 2013"); the only truncated answer had hit the token limit.
+# A refusal now means an answer that is *only* a refusal.
+ANSWER_CHECK_VERSION = 2
+
+
+def is_bare_refusal(answer: str) -> bool:
+    """The answer says it cannot answer and says nothing else of substance."""
+    if not _REFUSAL_RE.search(answer):
+        return False
+    rest = [s for s in A._SENT_SPLIT_RE.split(answer.strip()) if not _REFUSAL_RE.search(s)]
+    return len(words(" ".join(rest))) < 3
+
+
 def check_answer(answer: str, finish: str | None = None) -> list[str]:
     a = (answer or "").strip()
-    n = len(words(a))
     reasons = []
     if finish == "length":
         reasons.append("max_tokens")
+    if not words(a):
+        reasons.append("empty")
     if "<think>" in a or "</think>" in a:
         reasons.append("thinking_text")
-    if n < 3:
-        reasons.append("too_short")
-    elif _REFUSAL_RE.search(a) and n < 20:
+    if is_bare_refusal(a):
         reasons.append("refusal")
-    if n > 250:
+    if len(words(a)) > 250:
         reasons.append("too_long")
-    if a and not ends_like_sentence(a):
-        reasons.append("unfinished")
     if _english_share(a) > 0.2:
         reasons.append("not_turkish")
     if re.search(r"^\s*#", a, re.MULTILINE):
@@ -262,6 +274,20 @@ def answer_messages(prompt: str) -> list[dict]:
 # --------------------------------------------------------------------------------------------
 # Resumable call logs: one JSONL line per attempt, the last line per id wins
 # --------------------------------------------------------------------------------------------
+
+def first_passing(lines: list[dict], check) -> dict[str, dict]:
+    """Per id, the first attempt that passes ``check(job, text, finish)``, re-checked from the log
+    text (so a corrected check needs no new calls); otherwise the last attempt, marked not ok.
+    A later attempt only exists because an earlier one failed, so the first passing one is the
+    answer the procedure would have kept."""
+    out = {}
+    for line in sorted(lines, key=lambda l: l["attempt"]):
+        if out.get(line["id"], {}).get("ok"):
+            continue
+        result, reasons = check({"id": line["id"]}, line["text"], line.get("finish"))
+        out[line["id"]] = {**line, "ok": not reasons, "result": result, "reasons": reasons}
+    return out
+
 
 def latest(lines: list[dict]) -> dict[str, dict]:
     out = {}

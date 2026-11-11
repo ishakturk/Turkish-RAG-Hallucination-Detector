@@ -44,6 +44,9 @@ REVIEW_FILE = "data/native_review.json"
 SIZES = {"wikipedia": 152, "legal": 48}          # final examples per domain, divisible by len(CELLS)
 CELLS = (("original", "qwen"), ("original", "deepseek"), ("partial", "qwen"), ("partial", "deepseek"))
 OVERSAMPLE = 1.5
+# Legal rewrites fail review far more often (14 of 31 in the second 05a run: the "missing" detail is in
+# the article, or nothing missing is asked), so legal draws 120 candidates. The first 72 are unchanged.
+LEGAL_OVERSAMPLE = 2.5
 MAX_CONTEXT_CHARS = 1500   # keeps labeling near 1.5 min per example; legal articles are ≤ 1,400
 QWEN_MODEL = "Qwen/Qwen3-8B"
 # Qwen3 non-thinking sampling settings recommended by its model card.

@@ -7,8 +7,9 @@
 #
 # First half of the native Turkish test set (`docs/technical-roadmap.md` §2.7, analysis plan §6):
 # 1. **Contexts:** 228 candidates from the 133 Wikipedia articles reserved in `data/mwqa_split.json`
-#    (never used for augmentation) and 72 law articles from `mtntasci/turkish-legal-rag` (CC BY 4.0),
-#    each at most 1,500 characters. That is 1.5× the final 152 + 48, because some answers will fail the checks in 05b.
+#    (never used for augmentation) and 120 law articles from `mtntasci/turkish-legal-rag` (CC BY 4.0),
+#    each at most 1,500 characters. That is 1.5× the final 152 Wikipedia and 2.5× the final 48 legal examples,
+#    because some rewrites fail review and some answers fail the checks in 05b.
 # 2. **Design:** every block of four candidates covers the four cells
 #    (original or rewritten question × Qwen or DeepSeek answer), fixed by seed 482.
 # 3. **Rewritten questions:** for half of the candidates DeepSeek writes a question whose main part
@@ -91,7 +92,7 @@ assert A.split_titles(mwqa)["native_titles"] == committed["native_titles"], "tit
 
 wiki = N.wiki_candidates(mwqa, committed["native_titles"], round(N.SIZES["wikipedia"] * N.OVERSAMPLE))
 legal_df = N.load_legal(cache=f"{DRIVE_DIR}/cache/turkish_legal_rag_qa.parquet")
-legal = N.legal_candidates(legal_df, round(N.SIZES["legal"] * N.OVERSAMPLE))
+legal = N.legal_candidates(legal_df, round(N.SIZES["legal"] * N.LEGAL_OVERSAMPLE))
 cands = N.assign_cells(wiki) + N.assign_cells(legal)
 
 print(f"wikipedia: {len(wiki)} contexts from {len({c['source'] for c in wiki})} articles | legal: {len(legal)} articles")

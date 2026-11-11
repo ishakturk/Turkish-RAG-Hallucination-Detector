@@ -465,6 +465,13 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
   - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
   - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
+- **R4 done (11 Nov, `results/06_train.json`).** R2's recipe + DeepSeek augmentation (18,901 training examples, 4,725 of them augmented), 3 seeds, mean ± sd on dev:
+  - **Threshold 0.5:** example F1 0.723 ± 0.007, span F1 **0.525 ± 0.011**, example AUROC 0.857, word AUROC 0.903.
+  - **Tuned thresholds:** 0.735 ± 0.005 / **0.532 ± 0.012**.
+  - **Per task vs R2 (threshold 0.5, span F1):** Summary **0.329 vs 0.300**, Data2txt 0.540 vs 0.517, QA 0.567 vs 0.568. Example F1 drops on QA (tuned 0.674 vs 0.703) and example AUROC overall (0.857 vs 0.869).
+  - **Mixed effect (Q5):** augmentation helps *where* the errors are (span F1, best of all runs; Summary span F1 highest of all runs, the weak task the augmentation targeted) but hurts *whether* an answer is hallucinated (example F1 −0.012). Seed spread also shrinks (example F1 sd 0.005 vs 0.006–0.032). A plausible cause for the QA example drop: augmented QA answers come from short contexts (≤ 2,500 characters) with in-sentence errors, unlike RAGTruth QA; the error analysis should check this.
+  - **Selection score 0.634 vs R2 0.638 → final model = R2** by the pre-registered rule (analysis plan §4.4: R4 only if ≥ its base). The gap is small (0.005) and within seed noise; the rule is applied as written. Q5 is still reported on the final test as an effect size with its CI.
+  - **Cost:** 60–80 min per seed, 6.6 GB peak.
 - **R3 done (10 Nov, `results/06_train.json`).** KR Labs v2 mmBERT (same architecture as R2, hallucination-pretrained), 3 seeds, mean ± sd on dev:
   - **Threshold 0.5:** example F1 0.719 ± 0.026, span F1 0.497 ± 0.019, example AUROC 0.857, word AUROC 0.904.
   - **Tuned thresholds:** 0.732 ± 0.032 / 0.514 ± 0.015.
@@ -525,6 +532,6 @@ The table above is the original estimate. Rules: pick the runtime type before st
 1. ~~User spot check~~ done (see the progress log).
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
-4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ (done 10 Nov) → `["r4"]` with `R4_BASE = "r2"` (~4 h) → `["r0"]` (~1.5 h). Send `results/06_train.json` after each group.
+4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ → ~~`["r4"]`~~ (done 11 Nov) → `["r0"]` (~1.5 h). Send `results/06_train.json` after each group.
 5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
-6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). After R4: apply the final-model rule (R4 if its dev score ≥ R2's).
+6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). ~~After R4: apply the final-model rule~~ → **final model = R2** (0.638 vs R4 0.634, 11 Nov).

@@ -1,0 +1,18 @@
+{
+  "notebook": "11_release",
+  "commit": "e858745",
+  "time": "2026-11-11 18:31",
+  "release_run": "r2_mmbert_s42",
+  "thresholds": {
+    "tau_example": 0.8,
+    "tau_span": 0.75
+  },
+  "files": {
+    "native_test.jsonl": "a331e9ca9c526ec7787378070e79416aa6543778b0c45653d1709562d085de1d",
+    "native_predictions.npz": "ce6365026bf0bf4102613e9488d9fc16e5efaaad2853e032f581c5e110b6a988"
+  },
+  "hf_repo": "ishakturk/turkish-rag-hallucination-detector",
+  "upload_check": {
+    "max_abs_prob_diff_vs_notebook_10": 0.06505568325519562
+  }
+}

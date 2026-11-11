@@ -23,7 +23,7 @@
 
 # %%
 MODE = "quick"          # "quick" or "full"
-MODEL_REPO = None       # Hugging Face id of the released model; filled in after notebook 11
+MODEL_REPO = "ishakturk/turkish-rag-hallucination-detector"   # the released final model (notebook 11)
 
 # %% [markdown]
 # ## 0 · Setup
@@ -186,10 +186,21 @@ else:
     from hdtr.infer import load_detector, predict_many
     on_gpu = torch.cuda.is_available()
     native_bf16 = on_gpu and torch.cuda.get_device_capability()[0] >= 8      # T4 has no native bf16
-    tok, model = load_detector(MODEL_REPO, dtype=torch.bfloat16 if native_bf16 else torch.float32)
     tau = systems[R.RELEASE_RUN]
-    print("loaded", MODEL_REPO, "| thresholds:", {k: tau[k] for k in ("tau_example", "tau_span")},
-          "| device:", next(model.parameters()).device)
+    hf_token = None
+    if IN_COLAB:   # optional: only needed while the model repository is still private
+        from google.colab import userdata
+        try:
+            hf_token = userdata.get("HF_TOKEN")
+        except Exception:
+            pass
+    try:
+        tok, model = load_detector(MODEL_REPO, dtype=torch.bfloat16 if native_bf16 else torch.float32,
+                                   **({"token": hf_token} if hf_token else {}))
+        print("loaded", MODEL_REPO, "| thresholds:", {k: tau[k] for k in ("tau_example", "tau_span")},
+              "| device:", next(model.parameters()).device)
+    except Exception as exc:   # e.g. no network, or the repository is still private
+        print(f"Could not download {MODEL_REPO} ({type(exc).__name__}); skipping the live part.")
 
 # %%
 EXAMPLES = ["wiki-01711", "wiki-03395", "wiki-00490", "legal-0082", "legal-0190"]

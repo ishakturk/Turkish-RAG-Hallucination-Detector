@@ -31,6 +31,8 @@ the released model live.
   Turkish augmentation data is best there (0.592). Translated benchmarks overstate how well Turkish
   detectors work.
 
+Final model: [`ishakturk/turkish-rag-hallucination-detector`](https://huggingface.co/ishakturk/turkish-rag-hallucination-detector)
+(run `r2_mmbert_s42`, frozen thresholds in its model card).
 Report (Turkish, IEEE, 10 pages): [`report/rapor_tr.pdf`](report/rapor_tr.pdf). Article (English, 5 pages):
 [`report/article_en.pdf`](report/article_en.pdf). Data card: [`data/README.md`](data/README.md).
 

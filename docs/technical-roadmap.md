@@ -570,5 +570,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
 6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). ~~After R4: apply the final-model rule~~ → **final model = R2** (0.638 vs R4 0.634, 11 Nov).
 7. ~~**Claude:** native test set notebooks and labeling guide~~ written (11 Nov): `docs/labeling-guide.md` (English + Turkish), `hdtr.native` (9 tests, 70 in total), `05a_native_questions` (CPU), `05b_native_answers` (L4). Dry run of both with a fake DeepSeek and a fake Qwen on the real contexts passes: 200 examples, balanced cells, resume without new calls.
    - ~~**User:** run `05a`~~ done; reviewed (11 rejected, legal source narrowed). Second and third runs reviewed; all 203 rewrites reviewed, 30 rejected.
-   - **User:** then run `05b` (L4, ~20–30 min), send `05b_native_answers.json`, and label `native_labeling.csv` blind following the guide.
+   - ~~**User:** run `05b`~~ done; rerun with checks v2 gives **184 examples** (`results/05b_native_answers.json`, at a7ecc75, identical to Claude's dry run on the same logs). The native set is now fixed.
+   - **User:** send the *blank* `native_labeling.csv` once, then label it blind following the guide (~3–4.5 h, blocks of 25).
+   - **Claude:** label the blank sheet independently before seeing the user's labels; keep the labels outside git and commit only their SHA-256, so the order is provable. Then κ, adjudication list, span proposals.
    - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

@@ -130,17 +130,17 @@
     "llm_vs_llm_to_claude": 3,
     "llm_vs_llm_to_sheets": 3,
     "human_vs_reference_to_human": [
-      "wiki-00553",
-      "wiki-01723"
+      "wiki-00553"
     ],
     "human_vs_reference_to_reference": [
       "wiki-00716",
       "wiki-01166",
       "wiki-01709",
+      "wiki-01723",
       "wiki-02692",
       "wiki-02696"
     ],
-    "final_positive": 48,
+    "final_positive": 47,
     "final_n": 184
   }
 }

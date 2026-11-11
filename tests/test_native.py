@@ -188,3 +188,14 @@ def test_cohen_kappa_and_grouped_agreement():
     assert out["n"] == 4 and out["contexts"] == 3 and out["disagreements"] == ["c"]
     assert out["observed_agreement"] == 0.75 and abs(out["pabak"] - 0.5) < 1e-12
     assert out["kappa_low"] <= out["kappa"] <= out["kappa_high"]
+
+
+def test_locate_spans_requires_one_exact_match():
+    ans = "Lig 1929'da kuruldu ve 1929'da ilk maç oynandı."
+    assert N.locate_spans(ans, ["kuruldu"]) == [{"start": 12, "end": 19, "text": "kuruldu"}]
+    for bad in (["1929'da"], ["1930"]):
+        try:
+            N.locate_spans(ans, bad)
+            raise AssertionError("should fail")
+        except ValueError:
+            pass

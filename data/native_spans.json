@@ -1,0 +1,359 @@
+{
+ "note": "Gold hallucinated spans (character offsets into the answer) for the native test set; Claude-proposed, not edited row by row (analysis plan §10, amendment 1). Rows absent here have no span.",
+ "spans": {
+  "wiki-00065": [
+   {
+    "start": 292,
+    "end": 314,
+    "text": "dış kaynaklardan gelen"
+   }
+  ],
+  "wiki-01332": [
+   {
+    "start": 149,
+    "end": 179,
+    "text": "\"Turizm Otobüsü\" kategorisinde"
+   }
+  ],
+  "wiki-00490": [
+   {
+    "start": 20,
+    "end": 31,
+    "text": "336 yılında"
+   }
+  ],
+  "wiki-01711": [
+   {
+    "start": 64,
+    "end": 119,
+    "text": "İtalya İstatistik Kurumu (ISTAT) tarafından yapılmıştır"
+   }
+  ],
+  "wiki-04883": [
+   {
+    "start": 132,
+    "end": 150,
+    "text": "1860'larda kuruldu"
+   }
+  ],
+  "wiki-03395": [
+   {
+    "start": 116,
+    "end": 128,
+    "text": "2015 yılında"
+   }
+  ],
+  "legal-0082": [
+   {
+    "start": 45,
+    "end": 70,
+    "text": "müebbet hapis cezası veya"
+   }
+  ],
+  "legal-0190": [
+   {
+    "start": 101,
+    "end": 121,
+    "text": "işçilerin niteliğine"
+   },
+   {
+    "start": 274,
+    "end": 306,
+    "text": "2008 yılında yürürlüğe girmiştir"
+   }
+  ],
+  "wiki-00225": [
+   {
+    "start": 69,
+    "end": 94,
+    "text": "25 Haziran 1991 tarihinde"
+   }
+  ],
+  "wiki-01018": [
+   {
+    "start": 15,
+    "end": 112,
+    "text": "kurdele kalbi kırılmış birisinin gözyaşlarını silmek için kullandığı bir mendil olarak bağlanmalı"
+   }
+  ],
+  "wiki-04076": [
+   {
+    "start": 110,
+    "end": 122,
+    "text": "1354 yılında"
+   }
+  ],
+  "wiki-01627": [
+   {
+    "start": 93,
+    "end": 100,
+    "text": "1957'de"
+   }
+  ],
+  "wiki-01678": [
+   {
+    "start": 0,
+    "end": 18,
+    "text": "Otonomist Marksizm"
+   }
+  ],
+  "wiki-02324": [
+   {
+    "start": 105,
+    "end": 124,
+    "text": "1990/1991 sezonunda"
+   }
+  ],
+  "wiki-02076": [
+   {
+    "start": 63,
+    "end": 79,
+    "text": "1990'lı yıllarda"
+   }
+  ],
+  "wiki-03867": [
+   {
+    "start": 60,
+    "end": 72,
+    "text": "1807 yılında"
+   },
+   {
+    "start": 96,
+    "end": 108,
+    "text": "İngiltere'de"
+   }
+  ],
+  "legal-0005": [
+   {
+    "start": 158,
+    "end": 228,
+    "text": "bilgi edinme hakkı kapsamında olan kurumlara başvurularak talep edilir"
+   }
+  ],
+  "wiki-00474": [
+   {
+    "start": 45,
+    "end": 54,
+    "text": "Viyana'da"
+   }
+  ],
+  "wiki-04512": [
+   {
+    "start": 13,
+    "end": 26,
+    "text": "\"bağdaşıklık\""
+   }
+  ],
+  "wiki-00716": [
+   {
+    "start": 92,
+    "end": 119,
+    "text": "40–80 gün içinde olgunlaşır"
+   }
+  ],
+  "wiki-02759": [
+   {
+    "start": 24,
+    "end": 32,
+    "text": "M3 tankı"
+   }
+  ],
+  "wiki-00551": [
+   {
+    "start": 30,
+    "end": 40,
+    "text": "12 yaşında"
+   }
+  ],
+  "legal-0000": [
+   {
+    "start": 281,
+    "end": 309,
+    "text": "2008 yılında yürürlüğe girdi"
+   }
+  ],
+  "wiki-01166": [
+   {
+    "start": 68,
+    "end": 84,
+    "text": "en önemli nedeni"
+   }
+  ],
+  "legal-0189": [
+   {
+    "start": 322,
+    "end": 352,
+    "text": "zamdan önceki ücret hesaplanır"
+   }
+  ],
+  "wiki-01185": [
+   {
+    "start": 42,
+    "end": 58,
+    "text": "gizli tohumlarla"
+   }
+  ],
+  "wiki-03333": [
+   {
+    "start": 39,
+    "end": 50,
+    "text": "2013 sezonu"
+   },
+   {
+    "start": 62,
+    "end": 195,
+    "text": "Bu ceza kariyerini olumsuz etkiledi, çünkü bu ceza nedeniyle oynama imkanı kaybetti ve bu durum, kariyerinin ilerleyişini zorlaştırdı"
+   }
+  ],
+  "wiki-01393": [
+   {
+    "start": 135,
+    "end": 177,
+    "text": "adaylığına seçildi, ancak ödülü kazanamadı"
+   },
+   {
+    "start": 179,
+    "end": 190,
+    "text": "İlk ödülünü"
+   }
+  ],
+  "wiki-01744": [
+   {
+    "start": 99,
+    "end": 127,
+    "text": "antik çağın ikinci yarısında"
+   }
+  ],
+  "wiki-03864": [
+   {
+    "start": 55,
+    "end": 182,
+    "text": "bu çalışmasını Bristol'dan Londra'ya gelerek Royal Society'ye üye olduğu ve daha sonra başkan olduğu kurumda gerçekleştirmiştir"
+   }
+  ],
+  "wiki-00851": [
+   {
+    "start": 35,
+    "end": 46,
+    "text": "Left To Die"
+   }
+  ],
+  "wiki-04958": [
+   {
+    "start": 67,
+    "end": 77,
+    "text": "61 yaşında"
+   }
+  ],
+  "wiki-02696": [
+   {
+    "start": 19,
+    "end": 31,
+    "text": "1970 yılında"
+   }
+  ],
+  "wiki-04585": [
+   {
+    "start": 36,
+    "end": 61,
+    "text": "kaçırılma olayı sırasında"
+   }
+  ],
+  "wiki-04431": [
+   {
+    "start": 127,
+    "end": 168,
+    "text": "bu ödülü İtalyan Senatosu takdim etmiştir"
+   }
+  ],
+  "legal-0038": [
+   {
+    "start": 145,
+    "end": 179,
+    "text": "22/9/1983 tarihinde yayımlanmıştır"
+   }
+  ],
+  "legal-0175": [
+   {
+    "start": 99,
+    "end": 129,
+    "text": "1982 Anayasası'nda eklenmiştir"
+   }
+  ],
+  "wiki-03736": [
+   {
+    "start": 84,
+    "end": 123,
+    "text": "bu dönemde Nobel Edebiyat Ödülü'nü aldı"
+   }
+  ],
+  "legal-0195": [
+   {
+    "start": 365,
+    "end": 411,
+    "text": "Çalışma ve Sosyal Güvenlik Bakanlığına verilir"
+   }
+  ],
+  "legal-0066": [
+   {
+    "start": 9,
+    "end": 49,
+    "text": "işçiye sağladığı araç ve malzemeler için"
+   },
+   {
+    "start": 101,
+    "end": 153,
+    "text": "zorunlu harcamaları karşılayacak miktardan az olamaz"
+   }
+  ],
+  "wiki-00553": [
+   {
+    "start": 28,
+    "end": 74,
+    "text": "Ahmet Uluçay \"En iyi film\" ödüle layık görüldü"
+   }
+  ],
+  "wiki-01712": [
+   {
+    "start": 96,
+    "end": 103,
+    "text": "1752'de"
+   }
+  ],
+  "wiki-02692": [
+   {
+    "start": 59,
+    "end": 71,
+    "text": "1956 yılında"
+   }
+  ],
+  "legal-0037": [
+   {
+    "start": 174,
+    "end": 215,
+    "text": "2913 sayılı Kanun ile yürürlüğe girmiştir"
+   }
+  ],
+  "legal-0138": [
+   {
+    "start": 61,
+    "end": 149,
+    "text": "mirasbırakanın eşi, üstsoy ve altsoy kan hısımları, kardeşleri ve bu kişilerin eşleridir"
+   }
+  ],
+  "legal-0083": [
+   {
+    "start": 163,
+    "end": 187,
+    "text": "genel hukuk mahkemesidir"
+   }
+  ],
+  "legal-0031": [
+   {
+    "start": 669,
+    "end": 708,
+    "text": "22/2/2001 tarihinde yürürlüğe girmiştir"
+   }
+  ]
+ }
+}

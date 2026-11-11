@@ -548,3 +548,14 @@ def agreement(rater: dict[str, int], other: dict[str, int], ids: list[str], grou
             "kappa_high": float(np.quantile(boot, 0.975)) if len(boot) else float("nan"),
             "pabak": 2 * agree - 1,
             "disagreements": sorted(i for i in ids if rater[i] != other[i])}
+
+
+def locate_spans(answer: str, texts: list[str]) -> list[dict]:
+    """Character offsets of span texts in an answer; each text must occur exactly once."""
+    spans = []
+    for t in texts:
+        start = answer.find(t)
+        if start < 0 or answer.find(t, start + 1) >= 0:
+            raise ValueError(f"span text must occur exactly once: {t!r}")
+        spans.append({"start": start, "end": start + len(t), "text": t})
+    return sorted(spans, key=lambda s: s["start"])

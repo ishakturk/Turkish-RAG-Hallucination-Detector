@@ -136,5 +136,6 @@ If a bug is found after step 4, the fix and the rerun are documented in §10, wi
   The adjudicated label becomes the reference for those rows. The report states how many of the 7 were resolved toward the user's label and how many toward the LLM label.
 - **Adjudication outcome (2026-11-11, `data/native_adjudication.csv`):**
   - LLM–LLM disagreements: 3 went to each label set.
-  - User–reference disagreements: 5 of 7 went to the reference (wiki-00716, -01166, -01709, -02692, -02696), and 2 kept the user's label (wiki-00553 attribution, wiki-01723 omitted third meaning).
-  - Final reference (`data/native_reference_labels.csv`): **48 of 184 hallucinated (26%)**. By generator: Qwen 45/100, DeepSeek 3/84. By domain: Wikipedia 35/139, legal 13/45.
+  - User–reference disagreements: 6 of 7 went to the reference (wiki-00716, -01166, -01709, -01723, -02692, -02696), and 1 kept the user's label (wiki-00553, attribution).
+  - wiki-01723 was first adjudicated 1 (the answer omits a third meaning). The user then changed it to 0, because the guide counts partial answers as 0 and no span can mark missing text. The change is noted in the sheet.
+  - Final reference (`data/native_reference_labels.csv`): **47 of 184 hallucinated (26%)**. By generator: Qwen 44/100, DeepSeek 3/84. By domain: Wikipedia 34/139, legal 13/45.

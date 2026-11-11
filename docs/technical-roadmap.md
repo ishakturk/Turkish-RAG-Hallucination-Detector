@@ -472,6 +472,11 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - **R0 is overconfident:** training loss reaches ~0.02 by epoch 6 and its threshold curve is almost flat (span F1 0.43–0.47 for every τ from 0.05 to 0.85), so its probabilities sit near 0 or 1. Weighted CE plus early stopping (R1) keeps probabilities graded, which is what word AUROC measures.
   - **Selection score 0.602 vs R1 0.593:** a tie under our 0.01 margin. For Q4 the recipe changes *what* the model is good at more than *how good* it is; the final test decides, with R0's single seed as a stated limitation.
   - Ran on an A100 (47.5 min, 4.1 GB), not the L4 used for R1–R4. Results should be comparable; the hardware difference is noted in the report.
+- **Thresholds frozen (11 Nov, `results/07_thresholds.json`, notebook 07 at afff8e4).** Dev thresholds for all 22 systems; this commit is the freeze point before the final test is opened.
+  - **Rules re-applied on the same numbers:** R4 base = r2, final model = r2 (as recorded). **Best baseline = TurkEmbed4STS-HD** (selection score 0.603; next bge-m3 0.574, ModernBERT-tr 0.573).
+  - **Threshold tuning helps the baselines more than our runs.** TurkEmbed4STS example F1 0.700 → 0.728 (τ_example 0.35); several Newmind detectors prefer low thresholds (Ettin-150M 0.15, EuroBERT 0.25), so they are under-confident at 0.5. KR Labs zero-shot lands on the grid edge (0.05).
+  - **Dev gap, final model vs best baseline (tuned):** example F1 0.747 vs 0.728 (+0.019), span F1 0.529 vs 0.478 (+0.051), example AUROC 0.869 vs 0.834. The span gap is the clearer one; the example gap is small enough that the Q1 test on example F1 could go either way.
+  - On tuned dev scores R1 (0.593) and R0 (0.602) no longer beat TurkEmbed4STS (0.603): only the mmBERT runs (R2–R4) clearly do.
 - **All training done (11 Nov).** Final model R2; best baseline TurkEmbed4STS-HD (confirmed in 07 on tuned thresholds).
 - **R4 done (11 Nov, `results/06_train.json`).** R2's recipe + DeepSeek augmentation (18,901 training examples, 4,725 of them augmented), 3 seeds, mean ± sd on dev:
   - **Threshold 0.5:** example F1 0.723 ± 0.007, span F1 **0.525 ± 0.011**, example AUROC 0.857, word AUROC 0.903.
@@ -542,7 +547,7 @@ The table above is the original estimate. Rules: pick the runtime type before st
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
 4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ → ~~`["r4"]`~~ → ~~`["r0"]`~~ (all done 11 Nov). Send `results/06_train.json` after each group.
 5. ~~Notebooks `07_thresholds` and `08_final_test`~~ written (11 Nov, `hdtr.final`, 9 new tests, 61 in total). Dry run of both on fake predictions for all 22 systems passes, including the rule check, the fingerprint check and the rerun guard. Word-level counts and AUROC are now vectorised and cached per record: identical numbers, 08 runs in ~2 min locally instead of ~13.
-   - **User:** run `07_thresholds` (CPU runtime) and send `07_thresholds.json`. **Claude** commits it: that commit freezes the thresholds and the best-baseline choice before the test is opened.
+   - ~~**User:** run `07_thresholds`~~ done; committed 11 Nov. **Claude** commits it: that commit freezes the thresholds and the best-baseline choice before the test is opened.
    - **User:** then run `08_final_test` (CPU) **once** and send `08_final_test.json`.
 6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). ~~After R4: apply the final-model rule~~ → **final model = R2** (0.638 vs R4 0.634, 11 Nov).
 7. **Claude:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`); then 09 figures, `main.ipynb`, report.

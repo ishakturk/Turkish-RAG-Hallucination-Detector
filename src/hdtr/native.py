@@ -36,6 +36,11 @@ SEED = 482
 # Bump when REWRITE_SYSTEM changes: log files are named by it, so old rewrites are never reused.
 REWRITE_VERSION = 1
 LEGAL_DATASET = ("mtntasci/turkish-legal-rag", "qa_benchmark", "test")
+# Only rows with human-written questions. The other 77 active rows ("Scenario C Expansion", no
+# source_origin) have machine-templated, ungrammatical questions such as "Değişik aynen kabul uyarınca
+# öngörülen hukuki süreç nasıl işlemektedir?" (found in the 05a review, 11 Nov, before any answer).
+LEGAL_SOURCE = "kaggle_batuhankalem"
+REVIEW_FILE = "data/native_review.json"
 SIZES = {"wikipedia": 152, "legal": 48}          # final examples per domain, divisible by len(CELLS)
 CELLS = (("original", "qwen"), ("original", "deepseek"), ("partial", "qwen"), ("partial", "deepseek"))
 OVERSAMPLE = 1.5
@@ -97,7 +102,7 @@ def legal_candidates(legal: pd.DataFrame, n: int, seed: int = SEED, max_chars: i
                      min_chars: int = 300) -> list[dict]:
     """Up to ``n`` law articles, one per context, taken round-robin over the laws so no single
     law dominates."""
-    ok = legal["is_active"].eq(True) & legal["score_valid"].eq(True)
+    ok = legal["is_active"].eq(True) & legal["score_valid"].eq(True) & legal["source_origin"].eq(LEGAL_SOURCE)
     df = legal[ok & legal["context"].str.len().between(min_chars, max_chars)]
     df = df.drop_duplicates("context_key")
     rng = random.Random(seed)
@@ -205,6 +210,18 @@ def with_questions(cands: list[dict], rewrites: dict[str, dict]) -> list[dict]:
                     "missing_detail": extra.get("missing_detail", ""),
                     "prompt": A.qa_prompt(question, c["passages"], variant=c["variant"])})
     return out
+
+
+def apply_review(cands: list[dict], review: dict) -> tuple[list[dict], list[str]]:
+    """Drop rewritten questions that Claude rejected when reviewing 05a's output, before any answer
+    exists (the missing detail is in fact in the context, or the question makes no sense). Returns
+    the kept candidates and the rewritten-question ids nobody has reviewed yet."""
+    if review.get("rewrite_version") != REWRITE_VERSION:
+        raise ValueError(f"review is for rewrite v{review.get('rewrite_version')}, candidates use v{REWRITE_VERSION}")
+    reviewed = set(review["reviewed_ids"]) | set(review["rejected"])
+    unreviewed = [c["id"] for c in cands if c["question_type"] == "partial" and c["id"] not in reviewed]
+    kept = [c for c in cands if not (c["question_type"] == "partial" and c["id"] in review["rejected"])]
+    return kept, unreviewed
 
 
 # --------------------------------------------------------------------------------------------

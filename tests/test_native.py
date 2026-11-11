@@ -43,10 +43,20 @@ def test_legal_candidates_round_robin_and_filters():
         "kanun_adi": ["K1", "K1", "K1", np.nan, "K2"], "kaynak": ["K1", "K1", "K1", "Tüzük", "K2"],
         "context": [body, body + "x", body + "y", body + "z", body + "w"], "context_key": list("abcde"),
         "soru": ["Soru?"] * 5, "cevap": ["Cevap."] * 5,
-        "is_active": [True, True, False, True, True], "score_valid": [True] * 5})
+        "is_active": [True, True, False, True, True], "score_valid": [True] * 5,
+        "source_origin": [N.LEGAL_SOURCE] * 5})
     cands = N.legal_candidates(df, n=3)
     assert len(cands) == 3 and len({c["source"] for c in cands}) == 3   # K1, K2, Tüzük once each
     assert "legal-0002" not in {c["id"] for c in cands}                 # inactive row
+    df.loc[4, "source_origin"] = None                                    # templated question: excluded
+    assert "legal-0004" not in {c["id"] for c in N.legal_candidates(df, n=5)}
+
+
+def test_apply_review_drops_rejected_rewrites_and_reports_unreviewed():
+    cands = [_cand(0), _cand(1, qtype="partial"), _cand(2, qtype="partial"), _cand(3, qtype="partial")]
+    review = {"rewrite_version": N.REWRITE_VERSION, "reviewed_ids": ["wiki-1"], "rejected": {"wiki-2": "detail present"}}
+    kept, unreviewed = N.apply_review(cands, review)
+    assert [c["id"] for c in kept] == ["wiki-0", "wiki-1", "wiki-3"] and unreviewed == ["wiki-3"]
 
 
 def test_check_rewrite():

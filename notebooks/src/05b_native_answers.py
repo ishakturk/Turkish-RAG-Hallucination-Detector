@@ -82,7 +82,15 @@ NATIVE = f"{DRIVE_DIR}/native"
 cands = pd.read_parquet(f"{NATIVE}/candidates.parquet").to_dict("records")
 for c in cands:
     c["passages"] = list(c["passages"])
-print(len(cands), "candidates |", dict(Counter(c["generator"] for c in cands)))
+# Claude's review of the rewritten questions (committed before any answer exists).
+with open(f"{REPO_DIR}/{N.REVIEW_FILE}", encoding="utf-8") as f:
+    review = json.load(f)
+cands, unreviewed = N.apply_review(cands, review)
+if unreviewed:
+    raise RuntimeError(f"{len(unreviewed)} rewritten questions are not reviewed yet: send "
+                       "05a_native_questions.json to Claude first.")
+print(len(cands), "candidates after review |", dict(Counter(c["generator"] for c in cands)),
+      "| rejected rewrites:", len(review["rejected"]))
 
 # %% [markdown]
 # ## DeepSeek answers

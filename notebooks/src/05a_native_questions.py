@@ -16,7 +16,12 @@
 #    hallucination without making the question unanswerable.
 #
 # No answers are generated here, and nothing is labeled. Claude reviews the rewritten questions from
-# the results file before 05b runs.
+# the results file before 05b runs and records the outcome in `data/native_review.json`; 05b refuses to
+# run while any rewritten question is unreviewed. Rerunning is safe: finished rewrites are reused.
+#
+# **Legal questions:** only the 188 rows with human-written questions are used (`source_origin` =
+# `kaggle_batuhankalem`, 8 laws). The other rows have machine-templated, ungrammatical questions
+# (changed 11 Nov after the first run, before any answer existed).
 #
 # **Runtime:** CPU (~5 min, about $0.05). **Secrets:** `GH_TOKEN`, `DEEPSEEK_API_KEY`.
 # **Output:** `MyDrive/hdtr/native/candidates.parquet` and `MyDrive/hdtr/results/05a_native_questions.json` (send this one back).
@@ -120,6 +125,11 @@ print("rejection reasons (all attempts):", dict(reasons))
 
 # %%
 final_cands = N.with_questions(cands, rewrites)
+with open(f"{REPO_DIR}/{N.REVIEW_FILE}", encoding="utf-8") as f:
+    review = json.load(f)
+_, unreviewed = N.apply_review(final_cands, review)
+print(f"rewritten questions not yet reviewed by Claude: {len(unreviewed)}"
+      + (" → send the results file; 05b will not run until they are reviewed." if unreviewed else ""))
 frame = pd.DataFrame(final_cands)
 frame.to_parquet(f"{DRIVE_DIR}/native/candidates.parquet")
 print(f"saved {len(frame)} candidates to {DRIVE_DIR}/native/candidates.parquet")
@@ -143,6 +153,7 @@ results = {"notebook": "05a_native_questions", "commit": commit, "time": time.st
            "cells": {"/".join(k): v for k, v in Counter((c["domain"], c["question_type"], c["generator"])
                                                          for c in final_cands).items()},
            "context_chars": {"median": int(lengths.median()), "max": int(lengths.max())},
+           "unreviewed": unreviewed,
            "rewrites": [{"id": c["id"], "domain": c["domain"], "original": c["source_question"],
                          "question": c["question"], "answered_part": c["answered_part"],
                          "missing_detail": c["missing_detail"], "context": N.context_text(c["passages"])}

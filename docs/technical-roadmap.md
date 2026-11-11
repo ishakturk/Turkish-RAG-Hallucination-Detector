@@ -541,5 +541,8 @@ The table above is the original estimate. Rules: pick the runtime type before st
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
 4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ → ~~`["r4"]`~~ → ~~`["r0"]`~~ (all done 11 Nov). Send `results/06_train.json` after each group.
-5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
+5. ~~Notebooks `07_thresholds` and `08_final_test`~~ written (11 Nov, `hdtr.final`, 9 new tests, 61 in total). Dry run of both on fake predictions for all 22 systems passes, including the rule check, the fingerprint check and the rerun guard. Word-level counts and AUROC are now vectorised and cached per record: identical numbers, 08 runs in ~2 min locally instead of ~13.
+   - **User:** run `07_thresholds` (CPU runtime) and send `07_thresholds.json`. **Claude** commits it: that commit freezes the thresholds and the best-baseline choice before the test is opened.
+   - **User:** then run `08_final_test` (CPU) **once** and send `08_final_test.json`.
 6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). ~~After R4: apply the final-model rule~~ → **final model = R2** (0.638 vs R4 0.634, 11 Nov).
+7. **Claude:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`); then 09 figures, `main.ipynb`, report.

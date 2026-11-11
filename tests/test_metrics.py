@@ -95,3 +95,44 @@ def test_bootstrap_diff_seeds_matches_single_run_and_averages():
 def fn_val(records, fn):
     from hdtr.metrics import record_counts, sum_counts
     return fn(sum_counts(record_counts(r) for r in records))
+
+
+def _reference_counts_and_word_scores(record):
+    """The original per-word loop, kept here as the specification for the vectorised version."""
+    from hdtr.labels import char_mask
+    from hdtr.text import word_spans
+    a = record["answer"]
+    gold, pred = char_mask(len(a), record["gold_spans"]), char_mask(len(a), record["pred_spans"])
+    w = dict.fromkeys(("w_tp", "w_fp", "w_fn", "w_tn"), 0)
+    ys, ss = [], []
+    for s, e in word_spans(a):
+        g, p = bool(gold[s:e].any()), bool(pred[s:e].any())
+        w["w_tp"] += g and p; w["w_fp"] += (not g) and p; w["w_fn"] += g and not p; w["w_tn"] += (not g) and not p
+        ys.append(int(g)); ss.append(float(record["char_probs"][s:e].max()))
+    return w, ys, ss
+
+
+def test_vectorised_word_counts_and_auroc_match_the_per_word_loop():
+    from hdtr.metrics import _auroc_items, auroc, record_counts
+    rng = np.random.default_rng(7)
+    texts = ["Son başvuru 25 Ocak'a kadar.", "15.000'e çıktı", "a", "", "TL'dir 3,5 kat arttı ve bitti"]
+    records = []
+    for i in range(200):
+        a = texts[i % len(texts)]
+        spans = []
+        for _ in range(rng.integers(0, 3)):
+            if len(a) > 1:
+                s = int(rng.integers(0, len(a) - 1)); spans.append({"start": s, "end": int(rng.integers(s + 1, len(a) + 1))})
+        pred = [{"start": x["start"], "end": min(len(a), x["end"] + 1)} for x in spans[:1]]
+        records.append({"answer": a, "gold_spans": spans, "pred_spans": pred if i % 3 else [],
+                        "char_probs": rng.random(len(a)).astype(np.float32), "group": i})
+    for r in records:
+        w, ys, ss = _reference_counts_and_word_scores(r)
+        c = record_counts(r)
+        assert {k: c[k] for k in w} == w
+        _, _, wy, ws = _auroc_items(dict(r))
+        assert list(wy) == ys and np.allclose(ws, ss)
+    from sklearn.metrics import roc_auc_score
+    ys = [y for r in records for y in _reference_counts_and_word_scores(r)[1]]
+    ss = [s for r in records for s in _reference_counts_and_word_scores(r)[2]]
+    assert auroc(records)["word_auroc"] == pytest.approx(roc_auc_score(ys, ss))

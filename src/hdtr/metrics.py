@@ -12,6 +12,7 @@ A record is a dict with keys:
 from __future__ import annotations
 
 from collections import defaultdict
+from functools import lru_cache
 from typing import Callable, Iterable, Sequence
 
 import numpy as np
@@ -27,6 +28,21 @@ COUNT_KEYS = (
 )
 
 
+@lru_cache(maxsize=50_000)
+def _spans(answer: str) -> tuple:
+    """Word spans of an answer; the same answers are scored at several thresholds and many runs."""
+    return tuple(word_spans(answer))
+
+
+def _word_max(values: np.ndarray, spans: tuple) -> np.ndarray:
+    """Max of ``values`` over each word span (vectorised; the spans are sorted and non-empty)."""
+    if not spans:
+        return values[:0]
+    idx = np.fromiter((i for span in spans for i in span), dtype=np.intp, count=2 * len(spans))
+    padded = np.append(values, values[:1])  # sentinel so an end offset equal to len(values) is valid
+    return np.maximum.reduceat(padded, idx)[::2]
+
+
 def record_counts(record: dict) -> dict:
     """Additive counts for one example; metrics are computed from sums of these."""
     answer = record["answer"]
@@ -36,25 +52,30 @@ def record_counts(record: dict) -> dict:
     gold_ex = bool(gold.any())
     pred_ex = bool(pred.any())
 
-    w_tp = w_fp = w_fn = w_tn = 0
-    for s, e in word_spans(answer):
-        g = bool(gold[s:e].any())
-        p = bool(pred[s:e].any())
-        w_tp += g and p
-        w_fp += (not g) and p
-        w_fn += g and not p
-        w_tn += (not g) and not p
+    spans = _spans(answer)
+    g = _word_max(gold.astype(np.uint8), spans).astype(bool)
+    p = _word_max(pred.astype(np.uint8), spans).astype(bool)
 
     return {
         "ex_tp": int(gold_ex and pred_ex),
         "ex_fp": int(pred_ex and not gold_ex),
         "ex_fn": int(gold_ex and not pred_ex),
         "ex_tn": int(not gold_ex and not pred_ex),
-        "w_tp": w_tp, "w_fp": w_fp, "w_fn": w_fn, "w_tn": w_tn,
+        "w_tp": int((g & p).sum()), "w_fp": int((~g & p).sum()),
+        "w_fn": int((g & ~p).sum()), "w_tn": int((~g & ~p).sum()),
         "c_overlap": int((gold & pred).sum()),
         "c_pred": int(pred.sum()),
         "c_gold": int(gold.sum()),
     }
+
+
+def cached_counts(record: dict) -> dict:
+    """``record_counts``, stored on the record: bootstrap and permutation tests reuse the same
+    records many times, and counting words is the slow part. Records are not edited after creation."""
+    counts = record.get("_counts")
+    if counts is None:
+        counts = record["_counts"] = record_counts(record)
+    return counts
 
 
 def _prf(tp: float, fp: float, fn: float) -> tuple[float, float, float]:
@@ -88,31 +109,40 @@ def sum_counts(counts: Iterable[dict]) -> dict:
     return total
 
 
+def _auroc_items(record: dict):
+    """Labels and scores for AUROC from one record (stored on it, like ``cached_counts``)."""
+    items = record.get("_auroc")
+    if items is None:
+        answer, probs = record["answer"], np.asarray(record["char_probs"])
+        gold = char_mask(len(answer), record["gold_spans"])
+        spans = _spans(answer)
+        items = record["_auroc"] = (
+            int(gold.any()), float(probs.max()) if len(probs) else 0.0,
+            _word_max(gold.astype(np.uint8), spans).astype(np.int8), _word_max(probs, spans),
+        )
+    return items
+
+
 def auroc(records: Sequence[dict]) -> dict:
     """AUROC from probabilities: example level (max char prob) and word level (max per word)."""
-    ex_y, ex_s, w_y, w_s = [], [], [], []
-    for r in records:
-        probs = r.get("char_probs")
-        if probs is None:
-            return {}
-        answer = r["answer"]
-        gold = char_mask(len(answer), r["gold_spans"])
-        ex_y.append(int(gold.any()))
-        ex_s.append(float(probs.max()) if len(probs) else 0.0)
-        for s, e in word_spans(answer):
-            w_y.append(int(gold[s:e].any()))
-            w_s.append(float(probs[s:e].max()))
+    if any(r.get("char_probs") is None for r in records):
+        return {}
+    items = [_auroc_items(r) for r in records]
+    ex_y = [it[0] for it in items]
+    ex_s = [it[1] for it in items]
+    w_y = np.concatenate([it[2] for it in items]) if items else np.array([])
+    w_s = np.concatenate([it[3] for it in items]) if items else np.array([])
     out = {}
     if len(set(ex_y)) == 2:
         out["example_auroc"] = float(roc_auc_score(ex_y, ex_s))
-    if len(set(w_y)) == 2:
+    if len(np.unique(w_y)) == 2:
         out["word_auroc"] = float(roc_auc_score(w_y, w_s))
     return out
 
 
 def evaluate(records: Sequence[dict], by_task: bool = True) -> dict:
     """Metrics overall and per ``task_type``."""
-    counts = [record_counts(r) for r in records]
+    counts = [cached_counts(r) for r in records]
     result = {"overall": {**metrics_from_counts(sum_counts(counts)), **auroc(records)}}
     result["overall"]["n"] = len(records)
     if by_task:
@@ -133,7 +163,8 @@ def _grouped_counts(records: Sequence[dict]) -> tuple[list, np.ndarray]:
     """Per-group count vectors (groups x COUNT_KEYS), in first-seen group order."""
     groups: dict = {}
     for i, r in enumerate(records):
-        vec = np.array([record_counts(r)[k] for k in COUNT_KEYS], dtype=np.int64)
+        c = cached_counts(r)
+        vec = np.array([c[k] for k in COUNT_KEYS], dtype=np.int64)
         key = r.get("group", i)
         groups[key] = groups.get(key, 0) + vec
     keys = list(groups)
@@ -225,6 +256,27 @@ def _stack_runs(runs: Sequence[Sequence[dict]]) -> tuple[list, np.ndarray]:
     if any(k != keys for k, _ in keyed):
         raise ValueError("All runs must be scored on the same examples in the same order.")
     return keys, np.stack([c for _, c in keyed])
+
+
+def bootstrap_ci_seeds(
+    runs: Sequence[Sequence[dict]],
+    fn: MetricFn,
+    n_boot: int = 2000,
+    seed: int = 0,
+    alpha: float = 0.05,
+) -> dict:
+    """Percentile CI of the seed-averaged metric mean_s fn(run_s), resampling source groups once per
+    replicate for all seeds. With one run this equals ``bootstrap_ci``."""
+    _, counts = _stack_runs(runs)
+    rng = np.random.default_rng(seed)
+
+    def avg(idx=None):
+        sel = counts if idx is None else counts[:, idx]
+        return float(np.mean([fn(_as_counts(run.sum(0))) for run in sel]))
+
+    stats = [avg(rng.integers(0, counts.shape[1], counts.shape[1])) for _ in range(n_boot)]
+    lo, hi = np.quantile(stats, [alpha / 2, 1 - alpha / 2])
+    return {"point": avg(), "low": float(lo), "high": float(hi), "n_groups": int(counts.shape[1])}
 
 
 def bootstrap_diff_seeds(

@@ -589,7 +589,19 @@ The table above is the original estimate. Rules: pick the runtime type before st
      - It also gives breakdowns by domain, generator and question type, descriptive Q1–Q5 and R2-vs-existing differences, and a translated-vs-native table.
      - Each model's load is checked against its saved dev predictions.
      - A dry run on fake predictions passes both the scoring and the prediction branch.
-   - **User:** run `10_native_test` on an L4 and send `10_native_test.json`.
+   - ~~**User:** run `10_native_test`~~ done 11 Nov (`results/10_native_test.json`, at b3e5ce6).
+     - **Run checks:** no failures, and the label-file fingerprints match.
+       - Existing and classical detectors reproduce their dev predictions (max |Δp| ≤ 0.0002).
+       - Our runs use bf16-saved weights: |Δp| ≤ 0.06, except r0 (0.135) and r2 s42 (0.122). r2 s42 is also the weakest R2 seed on native.
+     - **Every supervised detector drops sharply from translated to native, mostly through recall.** Final model R2: example F1 0.766 → 0.458, recall 0.33 at precision 0.80.
+       Native hallucinations are subtle (wrong years, unsupported inferences), and the thresholds frozen on dev are high for this data.
+     - **R4 (native Turkish augmentation) is best on native:**
+       - example F1 0.592 [0.469, 0.696], AUROC 0.776, span F1 0.361;
+       - R4 − R2: example F1 +0.134 [0.037, 0.233];
+       - the gain is all on Wikipedia (0.60 vs 0.42), the same source as the augmentation; on legal the two are equal (0.55).
+     - **KR Labs zero-shot has the best AUROC (0.826),** but at its frozen τ 0.05 it flags almost everything (recall 0.94, precision 0.33).
+     - **Descriptive Q1 holds:** R2 − TurkEmbed4STS is +0.244 example F1 and +0.255 span F1, with both CIs above 0.
+     - **Little signal in some subsets:** DeepSeek has 3 positives and original questions have 9, so per-subset F1 there carries almost no signal.
    - ~~**User:** run `09`~~ done (`results/09_exploratory.json`, at ea52050). The Q1 reproduction check passed. **Exploratory: R2 beats all 7 existing detectors on both primary metrics** (every 95% CI above 0, no multiple-comparison correction). The closest: ModernBERT-tr, example F1 +0.028 [0.008, 0.049], span F1 +0.068 [0.043, 0.093]; bge-m3 +0.037 [0.018, 0.057] / +0.069 [0.043, 0.096].
    - ~~**Claude:** notebook `09_figures`~~ written (11 Nov, `hdtr.figures`, 2 tests, 74 in total): 5 figures (main results with CIs, Q1–Q5 forest, span F1 per task, dev threshold curves, training curves) and 4 tables (CSV + LaTeX), all rebuilt from the committed result files and checked by eye locally. Plus the **exploratory** paired CIs of R2 vs all 7 existing detectors; the cell checks that its TurkEmbed4STS comparison reproduces 08's Q1 exactly. **User:** run `09` (CPU) and send `09_exploratory.json`.
    - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

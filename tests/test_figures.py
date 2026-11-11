@@ -31,3 +31,13 @@ def test_tables_follow_the_08_numbers():
     q1 = q[(q.Q == "Q1") & (q.Metric == "Span F1")].iloc[0]
     assert q1.Role == "primary" and q1["CI low"] > 0
     assert set(q.Q) == {"Q1", "Q2", "Q3", "Q4", "Q5"}
+
+
+def test_native_figures_and_turkish_labels(tmp_path):
+    args = (_load("06_train.json"), _load("07_thresholds.json"), _load("08_final_test.json"))
+    native = _load("10_native_test.json")
+    written = F.build_all(*args, tmp_path / "tr", native=native, lang="tr")
+    assert {"fig6_translated_vs_native", "fig7_native_rates", "table4_native"} <= set(written)
+    assert F.name("r2") == F.NAMES["r2"]                                  # language reset afterwards
+    table = F.native_table(native)
+    assert len(table) == len(native["systems"]) and table.loc[0, "System"] == F.NAMES["r4"]

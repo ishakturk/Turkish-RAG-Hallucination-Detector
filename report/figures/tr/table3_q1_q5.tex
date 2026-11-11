@@ -1,0 +1,16 @@
+\begin{tabular}{lllrrrl}
+\toprule
+Q & Comparison & Metric & Difference & CI low & CI high & Role \\
+\midrule
+Q1 & final model − best baseline & Example F1 & 0.070000 & 0.049000 & 0.093000 & primary \\
+Q1 & final model − best baseline & Span F1 & 0.100000 & 0.075000 & 0.125000 & primary \\
+Q2 & R1 (TabiBERT) − R2 (mmBERT-base) & Example F1 & -0.050000 & -0.067000 & -0.035000 & secondary \\
+Q2 & R1 (TabiBERT) − R2 (mmBERT-base) & Span F1 & -0.051000 & -0.069000 & -0.034000 & secondary \\
+Q3 & R3 (KR Labs warm start) − R2 (mmBERT-base) & Example F1 & -0.005000 & -0.018000 & 0.007000 & secondary \\
+Q3 & R3 (KR Labs warm start) − R2 (mmBERT-base) & Span F1 & -0.012000 & -0.026000 & 0.000000 & secondary \\
+Q4 & R1 (our recipe) − R0 (Newmind-style recipe) & Example F1 & -0.022000 & -0.039000 & -0.002000 & secondary \\
+Q4 & R1 (our recipe) − R0 (Newmind-style recipe) & Span F1 & 0.016000 & -0.010000 & 0.042000 & secondary \\
+Q5 & R4 (with augmentation) − its base & Example F1 & -0.018000 & -0.030000 & -0.005000 & secondary \\
+Q5 & R4 (with augmentation) − its base & Span F1 & -0.004000 & -0.018000 & 0.008000 & secondary \\
+\bottomrule
+\end{tabular}

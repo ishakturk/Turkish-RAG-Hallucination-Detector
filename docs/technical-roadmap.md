@@ -602,6 +602,11 @@ The table above is the original estimate. Rules: pick the runtime type before st
      - **KR Labs zero-shot has the best AUROC (0.826),** but at its frozen τ 0.05 it flags almost everything (recall 0.94, precision 0.33).
      - **Descriptive Q1 holds:** R2 − TurkEmbed4STS is +0.244 example F1 and +0.255 span F1, with both CIs above 0.
      - **Little signal in some subsets:** DeepSeek has 3 positives and original questions have 9, so per-subset F1 there carries almost no signal.
+   - ~~**Claude:** native figures, report, article, slides~~ written (11 Nov).
+     - `hdtr.figures` can now label figures in Turkish (`lang="tr"`), and adds fig6 (translated vs native), fig7 (native hallucination rates) and table4 (native).
+     - `report/rapor_tr.tex`: the Turkish IEEE report. `report/article_en.tex`: a shorter English article. Both compile on Overleaf; LaTeX is not installed locally, so they are not yet compiled or page-counted.
+     - The Turkish slide deck is a 16-slide artifact with speaker notes.
+     - **Still to do:** compile and proofread the report, `main.ipynb`, and the README update.
    - ~~**User:** run `09`~~ done (`results/09_exploratory.json`, at ea52050). The Q1 reproduction check passed. **Exploratory: R2 beats all 7 existing detectors on both primary metrics** (every 95% CI above 0, no multiple-comparison correction). The closest: ModernBERT-tr, example F1 +0.028 [0.008, 0.049], span F1 +0.068 [0.043, 0.093]; bge-m3 +0.037 [0.018, 0.057] / +0.069 [0.043, 0.096].
    - ~~**Claude:** notebook `09_figures`~~ written (11 Nov, `hdtr.figures`, 2 tests, 74 in total): 5 figures (main results with CIs, Q1–Q5 forest, span F1 per task, dev threshold curves, training curves) and 4 tables (CSV + LaTeX), all rebuilt from the committed result files and checked by eye locally. Plus the **exploratory** paired CIs of R2 vs all 7 existing detectors; the cell checks that its TurkEmbed4STS comparison reproduces 08's Q1 exactly. **User:** run `09` (CPU) and send `09_exploratory.json`.
    - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

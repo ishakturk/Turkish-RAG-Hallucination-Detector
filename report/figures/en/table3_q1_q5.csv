@@ -1,0 +1,11 @@
+Q,Comparison,Metric,Difference,CI low,CI high,Role
+Q1,final model − best baseline,Example F1,0.07,0.049,0.093,primary
+Q1,final model − best baseline,Span F1,0.1,0.075,0.125,primary
+Q2,R1 (TabiBERT) − R2 (mmBERT-base),Example F1,-0.05,-0.067,-0.035,secondary
+Q2,R1 (TabiBERT) − R2 (mmBERT-base),Span F1,-0.051,-0.069,-0.034,secondary
+Q3,R3 (KR Labs warm start) − R2 (mmBERT-base),Example F1,-0.005,-0.018,0.007,secondary
+Q3,R3 (KR Labs warm start) − R2 (mmBERT-base),Span F1,-0.012,-0.026,0.0,secondary
+Q4,R1 (our recipe) − R0 (Newmind-style recipe),Example F1,-0.022,-0.039,-0.002,secondary
+Q4,R1 (our recipe) − R0 (Newmind-style recipe),Span F1,0.016,-0.01,0.042,secondary
+Q5,R4 (with augmentation) − its base,Example F1,-0.018,-0.03,-0.005,secondary
+Q5,R4 (with augmentation) − its base,Span F1,-0.004,-0.018,0.008,secondary

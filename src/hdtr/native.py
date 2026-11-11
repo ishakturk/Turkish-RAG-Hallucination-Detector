@@ -511,3 +511,40 @@ def read_label_sheet(sheet: pd.DataFrame, ids: list[str]) -> tuple[dict[str, int
         else:
             problems.append(f"row {row.no} ({row.id}): label must be 0 or 1, got {raw!r}")
     return labels, problems
+
+
+def cohen_kappa(a, b) -> float:
+    """Cohen's κ for two binary label vectors; nan when chance agreement is 1 (one constant label)."""
+    a, b = [int(x) for x in a], [int(x) for x in b]
+    n = len(a)
+    po = sum(x == y for x, y in zip(a, b)) / n
+    pa, pb = sum(a) / n, sum(b) / n
+    pe = pa * pb + (1 - pa) * (1 - pb)
+    return float("nan") if pe == 1 else (po - pe) / (1 - pe)
+
+
+def agreement(rater: dict[str, int], other: dict[str, int], ids: list[str], groups: dict[str, str],
+              n_boot: int = 2000, seed: int = SEED) -> dict:
+    """κ between two raters on ``ids`` (rows either rater left blank are skipped), with a percentile
+    bootstrap CI that resamples contexts (``groups``: id -> context key), as in analysis plan §6."""
+    import numpy as np
+    ids = [i for i in ids if i in rater and i in other]
+    by_group: dict[str, list[str]] = {}
+    for i in ids:
+        by_group.setdefault(groups[i], []).append(i)
+    blocks = list(by_group.values())
+    rng = np.random.default_rng(seed)
+    boot = []
+    for _ in range(n_boot):
+        pick = [i for k in rng.integers(0, len(blocks), len(blocks)) for i in blocks[k]]
+        boot.append(cohen_kappa([rater[i] for i in pick], [other[i] for i in pick]))
+    boot = np.array(boot)
+    boot = boot[~np.isnan(boot)]
+    agree = sum(rater[i] == other[i] for i in ids) / len(ids)
+    return {"n": len(ids), "contexts": len(blocks), "rater_positive": sum(rater[i] for i in ids),
+            "other_positive": sum(other[i] for i in ids), "observed_agreement": agree,
+            "kappa": cohen_kappa([rater[i] for i in ids], [other[i] for i in ids]),
+            "kappa_low": float(np.quantile(boot, 0.025)) if len(boot) else float("nan"),
+            "kappa_high": float(np.quantile(boot, 0.975)) if len(boot) else float("nan"),
+            "pabak": 2 * agree - 1,
+            "disagreements": sorted(i for i in ids if rater[i] != other[i])}

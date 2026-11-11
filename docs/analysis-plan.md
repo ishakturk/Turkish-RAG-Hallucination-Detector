@@ -120,3 +120,17 @@ If a bug is found after step 4, the fix and the rerun are documented in §10, wi
   3. **Spans:** proposed by Claude for every row with reference label 1; not edited row by row. Native span F1 stays secondary (§6 already allows LLM-proposed spans).
 - **Unchanged:** the native set is scored once, with dev thresholds, never used for training or tuning, and Q6 stays descriptive.
 - **Reporting:** the report describes the set as "LLM-labeled, validated by a human on a 50-row random sample", not as hand-labeled.
+
+### Amendment 2 (2026-11-11): result of the human check, and adjudication of its disagreements
+
+- **Result (recorded before any of the rows were discussed; `results/native_agreement.json`, `scripts/native_agreement.py`):**
+  - The user labeled 49 of the 50 rows; wiki-02309 was left blank and marked unsure, so it is excluded.
+  - User vs reference labels: 42/49 agree (85.7%), **κ = 0.38, 95% CI [−0.07, 0.73]**, bootstrap over contexts. Wikipedia (37 rows): κ = 0.25 [−0.14, 0.65]. Legal (12 rows): 12/12 agree, but with only 1 positive the CI is degenerate.
+  - Supplementary, not planned: PABAK = 0.71. κ is low partly because positives are rare (6 vs 7 of 49) and n is small.
+  - None of the 6 LLM–LLM disagreements fell in the sample. The two Claude label sets agree with the user identically on these 49 rows.
+  - These numbers are the human validation reported in the paper. The adjudication below does not change them.
+- **Adjudication (not in amendment 1):** the user decides 13 rows against the labeling guide, seeing both sides' notes (`data/native_adjudication_blank.csv`):
+  - the 6 LLM–LLM disagreements, as planned;
+  - the 7 rows where the user and the reference disagree.
+
+  The adjudicated label becomes the reference for those rows. The report states how many of the 7 were resolved toward the user's label and how many toward the LLM label.

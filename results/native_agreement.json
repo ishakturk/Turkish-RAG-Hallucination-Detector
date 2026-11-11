@@ -1,0 +1,129 @@
+{
+  "note": "Human (user, alone, no AI) vs reference LLM labels on the blind 50-row sample, before any adjudication. Reference = label where both Claude label sets agree. Bootstrap resamples contexts (2,000 replicates, seed 482). PABAK is supplementary (κ is low when positives are rare).",
+  "human_problems": [
+    "row 3 (wiki-02309): label must be 0 or 1, got ''"
+  ],
+  "human_vs_reference": {
+    "all": {
+      "n": 49,
+      "contexts": 49,
+      "rater_positive": 6,
+      "other_positive": 7,
+      "observed_agreement": 0.8571428571428571,
+      "kappa": 0.3797468354430375,
+      "kappa_low": -0.06784841980608364,
+      "kappa_high": 0.7308206106870226,
+      "pabak": 0.7142857142857142,
+      "disagreements": [
+        "wiki-00553",
+        "wiki-00716",
+        "wiki-01166",
+        "wiki-01709",
+        "wiki-01723",
+        "wiki-02692",
+        "wiki-02696"
+      ]
+    },
+    "wikipedia": {
+      "n": 37,
+      "contexts": 37,
+      "rater_positive": 5,
+      "other_positive": 6,
+      "observed_agreement": 0.8108108108108109,
+      "kappa": 0.25360230547550433,
+      "kappa_low": -0.13651877133105852,
+      "kappa_high": 0.6476190476190478,
+      "pabak": 0.6216216216216217,
+      "disagreements": [
+        "wiki-00553",
+        "wiki-00716",
+        "wiki-01166",
+        "wiki-01709",
+        "wiki-01723",
+        "wiki-02692",
+        "wiki-02696"
+      ]
+    },
+    "legal": {
+      "n": 12,
+      "contexts": 12,
+      "rater_positive": 1,
+      "other_positive": 1,
+      "observed_agreement": 1.0,
+      "kappa": 1.0,
+      "kappa_low": 1.0,
+      "kappa_high": 1.0,
+      "pabak": 1.0,
+      "disagreements": []
+    }
+  },
+  "human_vs_claude": {
+    "n": 49,
+    "contexts": 49,
+    "rater_positive": 6,
+    "other_positive": 7,
+    "observed_agreement": 0.8571428571428571,
+    "kappa": 0.3797468354430375,
+    "kappa_low": -0.06784841980608364,
+    "kappa_high": 0.7308206106870226,
+    "pabak": 0.7142857142857142,
+    "disagreements": [
+      "wiki-00553",
+      "wiki-00716",
+      "wiki-01166",
+      "wiki-01709",
+      "wiki-01723",
+      "wiki-02692",
+      "wiki-02696"
+    ]
+  },
+  "human_vs_claude_sheets": {
+    "n": 49,
+    "contexts": 49,
+    "rater_positive": 6,
+    "other_positive": 7,
+    "observed_agreement": 0.8571428571428571,
+    "kappa": 0.3797468354430375,
+    "kappa_low": -0.06784841980608364,
+    "kappa_high": 0.7308206106870226,
+    "pabak": 0.7142857142857142,
+    "disagreements": [
+      "wiki-00553",
+      "wiki-00716",
+      "wiki-01166",
+      "wiki-01709",
+      "wiki-01723",
+      "wiki-02692",
+      "wiki-02696"
+    ]
+  },
+  "claude_vs_claude_sheets_all_184": {
+    "n": 184,
+    "contexts": 184,
+    "rater_positive": 47,
+    "other_positive": 43,
+    "observed_agreement": 0.967391304347826,
+    "kappa": 0.9118069979229908,
+    "kappa_low": 0.8333333333333335,
+    "kappa_high": 0.971827307355167,
+    "pabak": 0.9347826086956521,
+    "disagreements": [
+      "legal-0004",
+      "wiki-01018",
+      "wiki-01185",
+      "wiki-01627",
+      "wiki-02130",
+      "wiki-04585"
+    ]
+  },
+  "llm_disagreements": [
+    "legal-0004",
+    "wiki-01018",
+    "wiki-01185",
+    "wiki-01627",
+    "wiki-02130",
+    "wiki-04585"
+  ],
+  "llm_disagreements_in_sample": [],
+  "reference_positive_rate_184": 0.23595505617977527
+}

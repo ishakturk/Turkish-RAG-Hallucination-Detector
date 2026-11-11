@@ -176,3 +176,15 @@ def test_labeling_sheet_hides_design_and_read_label_sheet_reports_problems():
     labels, problems = N.read_label_sheet(sheet, [c["id"] for c in final] + ["wiki-9"])
     assert len(labels) == 3 and set(labels.values()) == {0, 1}
     assert any("evet" in p for p in problems) and any("wiki-9" in p for p in problems)
+
+
+def test_cohen_kappa_and_grouped_agreement():
+    assert N.cohen_kappa([1, 0, 1, 0], [1, 0, 1, 0]) == 1.0
+    assert abs(N.cohen_kappa([1, 1, 0, 0], [1, 0, 1, 0])) < 1e-12        # chance level
+    assert np.isnan(N.cohen_kappa([0, 0], [0, 0]))
+    rater = {"a": 1, "b": 0, "c": 0, "d": 1, "e": 0}
+    other = {"a": 1, "b": 0, "c": 1, "d": 1}                               # "e" unlabeled: skipped
+    out = N.agreement(rater, other, list("abcde"), {"a": "x", "b": "x", "c": "y", "d": "z"}, n_boot=200)
+    assert out["n"] == 4 and out["contexts"] == 3 and out["disagreements"] == ["c"]
+    assert out["observed_agreement"] == 0.75 and abs(out["pabak"] - 0.5) < 1e-12
+    assert out["kappa_low"] <= out["kappa"] <= out["kappa_high"]

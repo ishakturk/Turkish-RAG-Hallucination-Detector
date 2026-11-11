@@ -84,6 +84,27 @@ def main() -> None:
                    "final", "final_note"]]
     sheet.to_csv(DATA / "native_adjudication_blank.csv", index=False, lineterminator="\n", encoding="utf-8")
 
+    adj_path = DATA / "native_adjudication.csv"
+    if adj_path.exists():
+        adj = read("native_adjudication.csv")
+        assert adj["id"].tolist() == sheet["id"].tolist() and adj["final"].isin(["0", "1"]).all()
+        final = {i: int(v) for i, v in zip(adj["id"], adj["final"])}
+        labels = [{"id": i, "label": final.get(i, reference.get(i)),
+                   "origin": "adjudicated" if i in final else "llm_agreed"} for i in all_ids]
+        assert all(r["label"] is not None for r in labels)
+        pd.DataFrame(labels).to_csv(DATA / "native_reference_labels.csv", index=False, lineterminator="\n")
+        human_rows = adj[adj["kind"] == "human_vs_reference"]
+        out["adjudication"] = {
+            "llm_vs_llm_to_claude": int((adj["kind"].eq("claude_vs_claude") & adj["final"].eq(adj["label_a"])).sum()),
+            "llm_vs_llm_to_sheets": int((adj["kind"].eq("claude_vs_claude") & adj["final"].eq(adj["label_b"])).sum()),
+            "human_vs_reference_to_human": human_rows.loc[human_rows["final"] == human_rows["label_a"], "id"].tolist(),
+            "human_vs_reference_to_reference": human_rows.loc[human_rows["final"] == human_rows["label_b"], "id"].tolist(),
+            "final_positive": sum(r["label"] for r in labels), "final_n": len(labels),
+        }
+        (ROOT / "results" / "native_agreement.json").write_text(
+            json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+        print("adjudication:", out["adjudication"])
+
     for d, r in out["human_vs_reference"].items():
         print(f"{d:10s} n={r['n']:2d} agree={r['observed_agreement']:.3f} kappa={r['kappa']:.3f} "
               f"[{r['kappa_low']:.3f}, {r['kappa_high']:.3f}] pabak={r['pabak']:.3f} "

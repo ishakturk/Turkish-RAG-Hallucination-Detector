@@ -579,7 +579,11 @@ The table above is the original estimate. Rules: pick the runtime type before st
        - the user marked 3 incomplete or mis-attributed answers as 1 (the guide counts partial answers as 0);
        - the user missed 4 subtle unsupported inferences that both LLM sets flagged.
      - All three label sets are now in `data/`, and the Claude labels match their committed fingerprint.
-   - **User:** adjudicate `data/native_adjudication_blank.csv` (13 rows: 6 LLM–LLM, 7 user–reference). Then **Claude:** final reference labels, spans for label-1 rows, native scoring notebook.
+   - ~~**User:** adjudicate the 13 rows~~ done 11 Nov.
+     - 5 of the 7 user–reference disagreements went to the reference.
+     - Final reference labels: `data/native_reference_labels.csv`, 48/184 hallucinated (Qwen 45/100, DeepSeek 3/84).
+     - Open: wiki-01723 is label 1 for an omission. The guide counts partial answers as 0, and a span cannot be marked for missing text.
+   - **Claude:** spans for label-1 rows, native scoring notebook.
    - ~~**User:** run `09`~~ done (`results/09_exploratory.json`, at ea52050). The Q1 reproduction check passed. **Exploratory: R2 beats all 7 existing detectors on both primary metrics** (every 95% CI above 0, no multiple-comparison correction). The closest: ModernBERT-tr, example F1 +0.028 [0.008, 0.049], span F1 +0.068 [0.043, 0.093]; bge-m3 +0.037 [0.018, 0.057] / +0.069 [0.043, 0.096].
    - ~~**Claude:** notebook `09_figures`~~ written (11 Nov, `hdtr.figures`, 2 tests, 74 in total): 5 figures (main results with CIs, Q1–Q5 forest, span F1 per task, dev threshold curves, training curves) and 4 tables (CSV + LaTeX), all rebuilt from the committed result files and checked by eye locally. Plus the **exploratory** paired CIs of R2 vs all 7 existing detectors; the cell checks that its TurkEmbed4STS comparison reproduces 08's Q1 exactly. **User:** run `09` (CPU) and send `09_exploratory.json`.
    - **Claude:** meanwhile 09 figures (with an exploratory paired CI of R2 vs every existing detector), `main.ipynb`, report. The report framing must change from "TabiBERT-based detector" to R2 (mmBERT-base).

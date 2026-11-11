@@ -16,3 +16,6 @@ data/cache/
 
 # Claude's independent native-set labels: only their SHA-256 is committed until the user has labeled
 labels_private/
+
+# Outputs of a local main.ipynb run
+main_outputs/

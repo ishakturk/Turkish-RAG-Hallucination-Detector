@@ -3,7 +3,7 @@
 Cells start with ``# %%`` (code) or ``# %% [markdown]`` (markdown; lines are un-commented).
 The .py files are the reviewed source of truth; the .ipynb files are what Colab opens.
 A line ``# colab-runtime: cpu`` anywhere in the source makes the notebook open on a CPU runtime
-(no GPU compute units); otherwise it asks for an L4.
+(no GPU compute units), ``# colab-runtime: t4`` on a free T4; otherwise it asks for an L4.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ def parse(text: str) -> list[dict]:
     return [c for c in cells if c["lines"]]
 
 
-def to_ipynb(cells: list[dict], gpu: bool = True) -> dict:
+def to_ipynb(cells: list[dict], gpu: bool = True, gpu_type: str = "L4") -> dict:
     nb_cells = []
     for cell in cells:
         source = [line + "\n" for line in cell["lines"]]
@@ -55,7 +55,7 @@ def to_ipynb(cells: list[dict], gpu: bool = True) -> dict:
     }
     if gpu:
         metadata["accelerator"] = "GPU"
-        metadata["colab"]["gpuType"] = "L4"
+        metadata["colab"]["gpuType"] = gpu_type
     return {
         "cells": nb_cells,
         "metadata": metadata,
@@ -68,7 +68,8 @@ def main(names: list[str]) -> None:
     sources = sorted(SRC.glob("*.py")) if not names else [SRC / f"{n}.py" for n in names]
     for src in sources:
         text = src.read_text(encoding="utf-8")
-        nb = to_ipynb(parse(text), gpu="# colab-runtime: cpu" not in text)
+        nb = to_ipynb(parse(text), gpu="# colab-runtime: cpu" not in text,
+                      gpu_type="T4" if "# colab-runtime: t4" in text else "L4")
         dest = OUT / f"{src.stem}.ipynb"
         dest.write_text(json.dumps(nb, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"{src.relative_to(ROOT)} -> {dest.relative_to(ROOT)} ({len(nb['cells'])} cells)")

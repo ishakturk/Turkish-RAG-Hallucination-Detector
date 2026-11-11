@@ -465,6 +465,14 @@ The table above is the original estimate. Rules: pick the runtime type before st
   - `span_final_sentence_share` **0.034** (RAGTruth-TR 0.11). Errors now sit mostly inside sentences; the position shortcut is not reintroduced.
   - In the 12 sample examples one hallucinated version is chronologically odd ("changed her name … and was born under that name"). The label is still right, but such text is easier to spot than RAGTruth's.
   - Data: `MyDrive/hdtr/augment/mwqa_aug.parquet`, used by R4 (≤25% of training examples, so ≤ ~4,700 of the 5,484).
+- **R0 done (11 Nov, `results/06_train.json`, A100, 1 seed).** TabiBERT with the Newmind-style recipe (6 epochs, lr 1e-5, batch 4, plain CE, uncleaned train, last checkpoint), dev:
+  - **Threshold 0.5:** example F1 0.723, span F1 0.466, example AUROC 0.840, word AUROC **0.851**.
+  - **Tuned:** 0.737 / 0.467. Summary span F1 **0.150** (R1 0.242).
+  - **vs R1 (same model, our recipe):** R0 is better at the example level (tuned example F1 0.737 vs 0.699 ± 0.019) but worse at the span level (0.467 vs 0.487 ± 0.003), much worse on Summary, and far worse at ranking words (word AUROC 0.851 vs 0.895). Plain CE gives precise but low-recall spans (span P 0.53 / R 0.42; R1 at 0.5: 0.37 / 0.60).
+  - **R0 is overconfident:** training loss reaches ~0.02 by epoch 6 and its threshold curve is almost flat (span F1 0.43–0.47 for every τ from 0.05 to 0.85), so its probabilities sit near 0 or 1. Weighted CE plus early stopping (R1) keeps probabilities graded, which is what word AUROC measures.
+  - **Selection score 0.602 vs R1 0.593:** a tie under our 0.01 margin. For Q4 the recipe changes *what* the model is good at more than *how good* it is; the final test decides, with R0's single seed as a stated limitation.
+  - Ran on an A100 (47.5 min, 4.1 GB), not the L4 used for R1–R4. Results should be comparable; the hardware difference is noted in the report.
+- **All training done (11 Nov).** Final model R2; best baseline TurkEmbed4STS-HD (confirmed in 07 on tuned thresholds).
 - **R4 done (11 Nov, `results/06_train.json`).** R2's recipe + DeepSeek augmentation (18,901 training examples, 4,725 of them augmented), 3 seeds, mean ± sd on dev:
   - **Threshold 0.5:** example F1 0.723 ± 0.007, span F1 **0.525 ± 0.011**, example AUROC 0.857, word AUROC 0.903.
   - **Tuned thresholds:** 0.735 ± 0.005 / **0.532 ± 0.012**.
@@ -532,6 +540,6 @@ The table above is the original estimate. Rules: pick the runtime type before st
 1. ~~User spot check~~ done (see the progress log).
 2. ~~Full augmentation run~~ done: 5,484 records, $0.80.
 3. ~~`06_train` and `docs/analysis-plan.md`~~ written (9 Nov).
-4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ → ~~`["r4"]`~~ (done 11 Nov) → `["r0"]` (~1.5 h). Send `results/06_train.json` after each group.
+4. **User:** run `06_train` group by group on an L4: ~~`["r1"]`~~ → ~~`["r2"]`~~ → ~~`["r3"]`~~ → ~~`["r4"]`~~ → ~~`["r0"]`~~ (all done 11 Nov). Send `results/06_train.json` after each group.
 5. **Claude, in parallel:** native test set: context selection from the reserved titles, labeling guide (`docs/labeling-guide.md`), answer generation (`05b`). Then notebook 07 (thresholds) and 08 (final test).
 6. ~~After R1–R3: apply the R4 base rule~~ → **r2** (10 Nov). ~~After R4: apply the final-model rule~~ → **final model = R2** (0.638 vs R4 0.634, 11 Nov).
